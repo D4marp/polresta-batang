@@ -1,26 +1,96 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-navy-50: #eef3fb;
+  --color-navy-100: #d9e3f4;
+  --color-navy-200: #b3c6e8;
+  --color-navy-300: #84a1d6;
+  --color-navy-400: #5578c0;
+  --color-navy-500: #365aa6;
+  --color-navy-600: #284887;
+  --color-navy-700: #1f3a6e;
+  --color-navy-800: #162a54;
+  --color-navy-900: #0f1f40;
+  --color-navy-950: #081230;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --color-gold-300: #f0d57a;
+  --color-gold-400: #e5bf4a;
+  --color-gold-500: #d4a72c;
+  --color-gold-600: #b48a1b;
+
+  --animate-fade-up: fade-up 0.6s ease-out both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+}
+
+@utility container-x {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-primary {
+  @apply btn bg-navy-800 text-white shadow-sm hover:bg-navy-700;
+}
+@utility btn-gold {
+  @apply btn bg-gold-500 text-navy-950 shadow-sm hover:bg-gold-400;
+}
+@utility btn-ghost {
+  @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50;
+}
+@utility btn-danger {
+  @apply btn bg-red-50 text-red-700 hover:bg-red-100;
+}
+@utility input {
+  @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 shadow-sm transition placeholder:text-slate-400 focus:border-navy-400 focus:outline-none focus:ring-4 focus:ring-navy-100;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-slate-700;
+}
+@utility card {
+  @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm;
+}
+
+@layer base {
+  ::selection { background: #e5bf4a; color: #081230; }
+  :focus-visible { outline: 3px solid #b48a1b; outline-offset: 4px; }
+  button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled), a { touch-action: manipulation; }
+  button:not(:disabled) { cursor: pointer; }
+  img { max-width: 100%; }
+  input, textarea, select { min-width: 0; }
+  p, h1, h2, h3 { overflow-wrap: anywhere; }
+}
+.skip-link { position: fixed; top: 8px; left: 16px; z-index: 100; transform: translateY(-160%); background: white; color: #081230; padding: 12px 20px; border-radius: 12px; }
+.skip-link:focus { transform: translateY(0); }
+.image-placeholder { display: grid; place-items: center; position: relative; overflow: hidden; background: radial-gradient(circle at 80% 15%, #d4a72c30, transparent 50%), repeating-linear-gradient(135deg, transparent, transparent 24px, #ffffff04 25px, #ffffff04 26px), #0f1f40; min-height: 64px; }
+.image-placeholder-label { padding: 1rem; color: #f0d57a; font-size: clamp(10px, 1.1vw, 15px); text-align: center; font-weight: 800; letter-spacing: .14em; }
+.image-placeholder-label > span { display: block; margin-top: 8px; color: #b3c6e8; font-size: 10px; font-weight: 400; letter-spacing: .02em; }
+.dashboard-shell { background: radial-gradient(ellipse at top right, #e8edf7, transparent 65%), #f4f6fa; }
+.dashboard-shell main { max-width: 1600px; width: 100%; margin-inline: auto; }
+.dashboard-shell .card { box-shadow: 0 4px 24px -18px #162a5450; }
+.dashboard-shell main > :first-child h1 { font-size: clamp(1.6rem, 3vw, 2rem); }
+.dashboard-shell nav a[aria-current="page"] { background: #d4a72c; color: #081230; box-shadow: 0 4px 16px #0002; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
 }

@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# Website Polresta Batang
 
-## Getting Started
+Next.js App Router, React, Tailwind CSS, dan SQL Server. Halaman publik dan dashboard membaca database pada setiap request. Session admin memakai cookie HttpOnly, SameSite=Lax, bertanda tangan HMAC, berlaku 8 jam.
 
-First, run the development server:
+## Menjalankan lokal
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. npm ci
+2. Atur .env.local: DATABASE_URL, AUTH_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD, SITE_URL, DATA_DIR.
+3. npm run db:setup untuk membuat tabel. Pada database kosong, contoh berita dibuat sebagai draf.
+4. npm run dev dan buka http://localhost:3000. Dashboard tersedia di /dashboard.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+DATABASE_URL mendukung SQL login melalui TCP atau connection string ODBC untuk Windows Authentication lokal. Produksi sebaiknya memakai SQL login dengan enkripsi dan sertifikat valid. Jangan commit .env.local.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Publikasi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Jalankan npm run lint, npm run build, dan npm run check:production. Pemeriksaan produksi tidak mencetak rahasia atau mengubah database. Setelah lulus, jalankan npm run start di server Node.js dengan akses SQL Server.
 
-## Learn More
+- AUTH_SECRET: acak, minimal 32 karakter. ADMIN_PASSWORD: unik, minimal 12 karakter.
+- SITE_URL: domain resmi lengkap dengan https://. Dipakai metadata dan sitemap.
+- DATA_DIR: path absolut ke folder persisten yang dapat ditulis aplikasi. Upload tersimpan dalam subfolder uploads.
+- Gunakan HTTPS reverse proxy; cookie Secure admin di mode produksi memerlukan HTTPS.
+- Sediakan backup database dan uploads. Penyimpanan ephemeral/serverless memerlukan migrasi upload ke object storage.
+- Batasi percobaan login dan formulir di reverse proxy/WAF sebelum akses internet, terutama untuk beberapa instance.
 
-To learn more about Next.js, take a look at the following resources:
+Dashboard Ringkasan menunjukkan kelengkapan konten. Ganti berita contoh pada database lama dan lengkapi kontak resmi, foto serta identitas pimpinan, lokasi, media sosial, dan dokumentasi kegiatan. Persetujuan konten resmi tetap diperlukan.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Sumber foto lokal tercatat di public/images/SOURCES.md. Pastikan izin penggunaan ulang sebelum publikasi. Gambar berita kosong memakai kartu identitas visual agar tidak menyiratkan dokumentasi kegiatan yang berbeda.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Sitemap hanya menyertakan berita terbit. Dashboard dan login tidak diindeks. Aplikasi memakai satu akun admin dari environment; pengelolaan peran dan multiuser belum tersedia.
