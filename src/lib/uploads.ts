@@ -1,10 +1,6 @@
 import "server-only";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { DATA_DIR } from "./db";
-
-export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
+import { getStorageAdmin, STORAGE_BUCKET } from "./supabase/admin";
 
 const IMAGE_EXT = ["jpg", "jpeg", "png", "webp", "gif"];
 const DOC_EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"];
@@ -55,14 +51,18 @@ export async function saveUpload(
   await validateUpload(file, kind);
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
   const name = `${randomUUID()}.${ext}`;
-  await fs.writeFile(path.join(UPLOAD_DIR, name), buffer);
+  const { error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).upload(name, buffer, {
+    contentType: MIME[ext], cacheControl: "3600", upsert: false,
+  });
+  if (error) throw new Error("File belum dapat diunggah ke Supabase Storage. Silakan coba kembali.");
   return { url: `/uploads/${name}`, size: file.size };
 }
 
 export async function removeUpload(url?: string | null) {
   if (!url?.startsWith("/uploads/")) return;
-  const name = path.basename(url);
-  await fs.rm(path.join(UPLOAD_DIR, name), { force: true });
+  const name = url.slice("/uploads/".length);
+  if (!/^[\w-]+\.[a-z0-9]+$/i.test(name)) return;
+  const { error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).remove([name]);
+  if (error) throw new Error("File belum dapat dihapus dari Supabase Storage.");
 }

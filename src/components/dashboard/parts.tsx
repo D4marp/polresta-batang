@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, UploadCloud } from "lucide-react";
 
 export function PageHeader({
   title,
@@ -13,7 +13,7 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="dashboard-page-header mb-7 flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">{title}</h1>
         {desc && <p className="mt-1 text-sm text-slate-500">{desc}</p>}
@@ -89,8 +89,9 @@ export function FileField({
           setSelection(files.length ? `${files.length} file dipilih · ${(total / 1024 / 1024).toFixed(2)} MB` : "");
           setPreviews(!error && isImage ? files.map(f => URL.createObjectURL(f)) : []);
         }}
-        className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-navy-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-navy-700 hover:file:bg-navy-100"
+        className="dashboard-file-input block w-full rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-xs text-slate-500 transition hover:border-navy-400 hover:bg-navy-50/50 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-bold file:text-navy-700 file:shadow-sm"
       />
+      <p className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500"><UploadCloud className="size-3.5" /> Pilih file dari perangkat Anda</p>
       {selection && <p role="status" className="mt-2 text-xs font-medium text-navy-700">{selection}</p>}
       {hint && <p id={`${name}-hint`} className="mt-1.5 text-xs text-slate-500">{hint}</p>}
       {current && removeName && (

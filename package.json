@@ -8,21 +8,27 @@
     "start": "next start",
     "lint": "eslint",
     "check:production": "node --env-file-if-exists=.env.local scripts/check-production.mjs",
-    "db:setup": "node --env-file-if-exists=.env.local scripts/setup-db.mjs"
+    "db:setup": "node --env-file-if-exists=.env.local scripts/setup-supabase.mjs",
+    "db:migrate:legacy": "node --env-file-if-exists=.env.local scripts/migrate-sqlserver.mjs",
+    "check:supabase": "node --env-file-if-exists=.env.local scripts/check-supabase.mjs",
+    "storage:setup": "node --env-file-if-exists=.env.local scripts/setup-storage.mjs",
+    "storage:migrate": "node --env-file-if-exists=.env.local scripts/migrate-storage.mjs",
+    "check:storage": "node --env-file-if-exists=.env.local scripts/check-storage.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "lucide-react": "^1.70.0",
-    "msnodesqlv8": "^6.2.2",
-    "mssql": "^12.7.14",
     "next": "16.4.5",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
-    "@types/mssql": "^12.3.0",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

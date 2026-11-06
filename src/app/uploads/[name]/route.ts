@@ -1,6 +1,5 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import { MIME, UPLOAD_DIR } from "@/lib/uploads";
+import { MIME } from "@/lib/uploads";
+import { getStorageAdmin, STORAGE_BUCKET } from "@/lib/supabase/admin";
 
 export async function GET(
   _req: Request,
@@ -14,17 +13,21 @@ export async function GET(
   if (!type) return new Response("Not found", { status: 404 });
 
   try {
-    const buf = await fs.readFile(path.join(UPLOAD_DIR, name));
-    return new Response(new Uint8Array(buf), {
+    const { data, error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).download(name);
+    if (error || !data) {
+      const missing = error && "statusCode" in error && ["404", "400"].includes(String(error.statusCode));
+      return new Response(missing ? "Not found" : "Storage unavailable", { status: missing ? 404 : 503 });
+    }
+    return new Response(data, {
       headers: {
         "Content-Type": type,
-        "Content-Length": String(buf.length),
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Length": String(data.size),
+        "Cache-Control": "public, max-age=3600",
         "X-Content-Type-Options": "nosniff",
         ...(type.startsWith("image/") ? {} : { "Content-Disposition": `inline; filename="${name}"` }),
       },
     });
   } catch {
-    return new Response("Not found", { status: 404 });
+    return new Response("Storage unavailable", { status: 503 });
   }
 }

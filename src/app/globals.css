@@ -86,11 +86,17 @@
 .image-placeholder { display: grid; place-items: center; position: relative; overflow: hidden; background: radial-gradient(circle at 80% 15%, #d4a72c30, transparent 50%), repeating-linear-gradient(135deg, transparent, transparent 24px, #ffffff04 25px, #ffffff04 26px), #0f1f40; min-height: 64px; }
 .image-placeholder-label { padding: 1rem; color: #f0d57a; font-size: clamp(10px, 1.1vw, 15px); text-align: center; font-weight: 800; letter-spacing: .14em; }
 .image-placeholder-label > span { display: block; margin-top: 8px; color: #b3c6e8; font-size: 10px; font-weight: 400; letter-spacing: .02em; }
-.dashboard-shell { background: radial-gradient(ellipse at top right, #e8edf7, transparent 65%), #f4f6fa; }
+.dashboard-shell { background: #f5f7fb; }
 .dashboard-shell main { max-width: 1600px; width: 100%; margin-inline: auto; }
-.dashboard-shell .card { box-shadow: 0 4px 24px -18px #162a5450; }
-.dashboard-shell main > :first-child h1 { font-size: clamp(1.6rem, 3vw, 2rem); }
-.dashboard-shell nav a[aria-current="page"] { background: #d4a72c; color: #081230; box-shadow: 0 4px 16px #0002; }
+.dashboard-shell .card { border-color: #e7ebf2; box-shadow: 0 4px 24px -18px #162a5430; }
+.dashboard-page-header h1 { font-size: clamp(1.6rem, 3vw, 1.85rem); letter-spacing: -.04em; }
+.dashboard-shell .dashboard-nav-item[aria-current="page"] { background: linear-gradient(110deg, #e5bf4a, #f0d57a); color: #081230; box-shadow: 0 4px 16px #0002; font-weight: 700; }
+.dashboard-shell .input { border-color: #dfe5ef; box-shadow: none; }
+.dashboard-shell .input:focus { border-color: #5578c0; }
+.dashboard-drawer::backdrop { background: #081230a6; backdrop-filter: blur(4px); }
+.dashboard-drawer[open] { animation: drawer-in .2s ease-out; }
+.dashboard-welcome { background: radial-gradient(ellipse at 90% 20%, #365aa680, transparent 60%), #0f1f40; }
+@keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
 }

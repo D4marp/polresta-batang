@@ -163,6 +163,8 @@ export async function deleteMessageAction(fd: FormData) {
 /* ---------- Pengaturan ---------- */
 export async function saveSettingsAction(_: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
+  const images = [fd.get("heroImage"), fd.get("leaderPhoto")].filter((f): f is File => f instanceof File);
+  if (images.reduce((total, file) => total + file.size, 0) > 10 * 1024 * 1024) return { error: "Total ukuran foto beranda dan pimpinan maksimal 10 MB per penyimpanan." };
   const current = await db.getSettings();
   const next: Settings = { ...current };
   const textKeys = [

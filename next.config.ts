@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
     ] }];
   },
-  serverExternalPackages: ["msnodesqlv8", "mssql", "tedious", "@azure/identity"],
+  serverExternalPackages: ["pg"],
+  outputFileTracingIncludes: { "/*": ["./certificates/supabase-ca.crt"] },
   experimental: {
     serverActions: { bodySizeLimit: "12mb" },
   },

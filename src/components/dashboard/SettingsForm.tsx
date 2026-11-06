@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { saveSettingsAction } from "@/actions/content";
 import { FormMessage, SubmitButton } from "@/components/ui";
 import { FileField } from "./parts";
@@ -34,8 +34,16 @@ function Field({
 
 export function SettingsForm({ s }: { s: Settings }) {
   const [state, action] = useActionState(saveSettingsAction, {});
+  const [uploadError, setUploadError] = useState<string>();
   return (
-    <form action={action} className="space-y-6">
+    <form action={action} onSubmit={(event) => {
+      const data = new FormData(event.currentTarget);
+      const total = [data.get("heroImage"), data.get("leaderPhoto")].reduce<number>((sum, file) => sum + (file instanceof File ? file.size : 0), 0);
+      if (total > 10 * 1024 * 1024) {
+        event.preventDefault();
+        setUploadError("Total ukuran foto beranda dan pimpinan maksimal 10 MB per penyimpanan.");
+      } else setUploadError(undefined);
+    }} className="space-y-6">
       <section className="card space-y-5 p-6">
         <h2 className="font-bold text-navy-900">Identitas & Kontak</h2>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -81,7 +89,7 @@ export function SettingsForm({ s }: { s: Settings }) {
         <Field name="sejarah" label="Tentang kami / sejarah" value={s.sejarah} rows={6} />
       </section>
 
-      <FormMessage state={state} success="Pengaturan berhasil disimpan." />
+      <FormMessage state={uploadError ? { error: uploadError } : state} success="Pengaturan berhasil disimpan." />
       <SubmitButton>Simpan Pengaturan</SubmitButton>
     </form>
   );

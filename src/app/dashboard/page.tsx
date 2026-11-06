@@ -4,6 +4,7 @@ import { FileText, Images, Mail, Newspaper, Plus, ArrowUpRight, CheckCircle2, Ci
 import { PageHeader } from "@/components/dashboard/parts";
 import { getSettings, listDocuments, listGallery, listMessages, listNews } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { Img } from "@/components/Img";
 
 export default async function DashboardHome() {
   await requireAdmin();
@@ -34,28 +35,30 @@ export default async function DashboardHome() {
     <>
       <PageHeader
         title="Ringkasan"
-        desc="Selamat datang di dashboard admin Polresta Batang."
+        desc={`Selamat datang di ruang kerja administrasi ${settings.name}.`}
         action={
           <Link href="/dashboard/berita/baru" className="btn-primary">
             <Plus className="size-4" /> Tulis Berita
           </Link>
         }
       />
-      <section className="mb-8 flex flex-col justify-between gap-5 rounded-2xl bg-navy-900 p-6 text-white sm:flex-row sm:items-center sm:p-8"><div><p className="text-xs font-semibold uppercase tracking-widest text-gold-300">Pusat pengelolaan website</p><h2 className="mt-2 text-xl font-bold">Informasi yang baik dimulai dari konten yang terawat.</h2><p className="mt-2 text-sm text-navy-200">Kelola berita, dokumentasi, dan pesan masyarakat dari satu tempat.</p></div><Link href="/" target="_blank" className="btn shrink-0 border border-white/20 bg-white/10 text-white hover:bg-white/20">Pratinjau website <ArrowUpRight className="size-4" /></Link></section>
+      <section className="dashboard-welcome relative mb-7 overflow-hidden rounded-2xl p-6 text-white sm:p-8"><div aria-hidden className="pointer-events-none absolute -right-5 -top-8 grid size-72 place-items-center rounded-full border border-white/5 p-12"><div className="grid size-full place-items-center rounded-full border border-white/10 p-8"><Img src="/logo.png" alt="" className="size-full object-contain opacity-15" /></div></div><div className="relative max-w-xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-gold-300">Pusat pengelolaan website</p><h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">Informasi terawat.<br />Pelayanan semakin dekat.</h2><p className="mt-3 max-w-md text-sm leading-6 text-navy-200">Kelola informasi dan dokumentasi satuan agar selalu mudah diakses masyarakat.</p><Link href="/" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-gold-300 transition hover:text-white">Pratinjau website <ArrowUpRight className="size-4" /></Link></div></section>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map(({ label, value, sub, icon: Icon, href }) => (
-          <Link key={label} href={href} className="card p-5 transition hover:shadow-md">
+        {stats.map(({ label, value, sub, icon: Icon, href }, index) => (
+          <Link key={label} href={href} className="card group p-5 transition hover:-translate-y-0.5 hover:border-navy-200 hover:shadow-md">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-slate-500">{label}</p>
-              <span className="grid size-10 place-items-center rounded-xl bg-navy-50 text-navy-700">
+              <span className={`grid size-10 place-items-center rounded-xl ${["bg-blue-50 text-blue-700", "bg-violet-50 text-violet-700", "bg-emerald-50 text-emerald-700", "bg-amber-50 text-amber-700"][index]}`}>
                 <Icon className="size-5" />
               </span>
             </div>
             <p className="mt-3 text-3xl font-extrabold text-navy-900">{value}</p>
-            <p className="text-xs text-slate-500">{sub}</p>
+            <div className="mt-1 flex items-center justify-between"><p className="text-xs text-slate-500">{sub}</p><ArrowUpRight className="size-4 text-slate-300 transition group-hover:text-navy-700" /></div>
           </Link>
         ))}
       </div>
+
+      <section className="mt-7"><h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">Akses cepat</h2><div className="grid gap-3 sm:grid-cols-3">{[{href:"/dashboard/berita/baru", label:"Tulis berita", desc:"Bagikan informasi terbaru", icon:Newspaper}, {href:"/dashboard/galeri", label:"Unggah foto", desc:"Lengkapi dokumentasi kegiatan", icon:Images}, {href:"/dashboard/dokumen", label:"Tambah dokumen", desc:"Sediakan berkas untuk publik", icon:FileText}].map(({href,label,desc,icon:Icon}) => <Link href={href} key={href} className="card group flex items-center gap-3 p-4 transition hover:border-navy-200"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-50 text-navy-700"><Icon className="size-[18px]" /></span><div className="flex-1"><p className="text-sm font-bold text-navy-900">{label}</p><p className="mt-1 text-[11px] text-slate-500">{desc}</p></div><ArrowUpRight className="size-4 shrink-0 text-slate-300 group-hover:text-navy-700" /></Link>)}</div></section>
 
       <section className="card mt-8 p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-bold text-navy-900">Kesiapan Konten Publikasi</h2><p className="mt-1 text-sm text-slate-500">Lengkapi informasi satuan sebelum website dipublikasikan.</p></div><span className="rounded-full bg-navy-50 px-3 py-1 text-xs font-bold text-navy-800">{complete} dari {checks.length} lengkap</span></div><div className="my-5 h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-label="Kelengkapan konten" aria-valuenow={complete} aria-valuemin={0} aria-valuemax={checks.length}><div className="h-full rounded-full bg-gold-500 transition-all" style={{ width: `${complete / checks.length * 100}%` }} /></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{checks.map(c => <Link key={c.label} href={c.href} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 text-sm transition hover:border-navy-200 hover:bg-navy-50">{c.done ? <CheckCircle2 className="size-5 shrink-0 text-emerald-600" /> : <Circle className="size-5 shrink-0 text-slate-400" />}<span className="flex-1">{c.label}</span><ArrowUpRight className="size-4 text-slate-400" /></Link>)}</div></section>
 

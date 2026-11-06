@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { query, type Param } from "./mssql";
+import { query, type Param } from "./postgres";
 import type { DocumentItem, GalleryItem, Message, News, Settings } from "./types";
 import { seedSettings } from "./seed";
 import { slugify } from "./format";
@@ -12,17 +12,15 @@ const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : String(d));
 /* ---------- Settings ---------- */
 export async function getSettings(): Promise<Settings> {
   const [row] = await query<{ value: string }>(
-    "SELECT value FROM settings WHERE [key] = @v0",
+    'SELECT value FROM settings WHERE "key" = @v0',
     ["main"],
   );
-  const saved = row ? (JSON.parse(row.value) as Partial<Settings>) : {};
+  const saved = row ? ((typeof row.value === "string" ? JSON.parse(row.value) : row.value) as Partial<Settings>) : {};
   return { ...seedSettings, ...saved };
 }
 export async function saveSettings(s: Settings) {
   await query(
-    `MERGE settings AS t USING (SELECT @v0 AS [key]) AS s ON t.[key] = s.[key]
-     WHEN MATCHED THEN UPDATE SET value = @v1
-     WHEN NOT MATCHED THEN INSERT ([key], value) VALUES (@v0, @v1);`,
+    `INSERT INTO settings ("key", value) VALUES (@v0, @v1::jsonb) ON CONFLICT ("key") DO UPDATE SET value = EXCLUDED.value`,
     ["main", JSON.stringify(s)],
   );
 }
@@ -62,7 +60,7 @@ export async function listNews(opts?: {
   if (opts?.q) {
     params.push(`%${opts.q.replace(/[%_[\]]/g, "")}%`);
     const i = params.length - 1;
-    where.push(`(title LIKE @v${i} OR excerpt LIKE @v${i})`);
+    where.push(`(title ILIKE @v${i} OR excerpt ILIKE @v${i})`);
   }
   const rows = await query<NewsRow>(
     `SELECT * FROM news ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY created_at DESC`,
@@ -145,7 +143,7 @@ export async function listDocuments(): Promise<DocumentItem[]> {
   }));
 }
 export async function addDocument(title: string, file: string, size: number) {
-  await query("INSERT INTO documents (id, title, [file], size, created_at) VALUES (@v0,@v1,@v2,@v3,@v4)", [
+  await query("INSERT INTO documents (id, title, file, size, created_at) VALUES (@v0,@v1,@v2,@v3,@v4)", [
     randomUUID(), title, file, size, new Date(),
   ]);
 }
@@ -165,13 +163,13 @@ export async function listMessages(): Promise<Message[]> {
 }
 export async function addMessage(m: Omit<Message, "id" | "read" | "createdAt">) {
   await query(
-    `INSERT INTO messages (id, name, email, phone, subject, message, [read], created_at)
-     VALUES (@v0,@v1,@v2,@v3,@v4,@v5,0,@v6)`,
+    `INSERT INTO messages (id, name, email, phone, subject, message, "read", created_at)
+     VALUES (@v0,@v1,@v2,@v3,@v4,@v5,false,@v6)`,
     [randomUUID(), m.name, m.email, m.phone, m.subject, m.message, new Date()],
   );
 }
 export async function setMessageRead(id: string, read: boolean) {
-  await query("UPDATE messages SET [read] = @v1 WHERE id = @v0", [id, read]);
+  await query('UPDATE messages SET "read" = @v1 WHERE id = @v0', [id, read]);
 }
 export async function deleteMessage(id: string) {
   await query("DELETE FROM messages WHERE id = @v0", [id]);

@@ -2,7 +2,7 @@ import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { getSettings } from "@/lib/db";
 
-// Data dibaca dari SQL Server pada setiap request (build tidak memerlukan database).
+// Data dibaca dari Supabase PostgreSQL pada setiap request.
 export const dynamic = "force-dynamic";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
