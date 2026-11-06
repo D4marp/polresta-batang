@@ -19,7 +19,7 @@ export default async function HomePage() {
       <section className="home-hero relative isolate overflow-hidden bg-navy-950 text-white">
         {(
           <Img
-            src={s.heroImage || "/images/pelayanan-batang.jpg"}
+            src={s.heroImage || "/images/apel-polisi-batang.jpg"}
             alt=""
             priority
             className="absolute inset-0 -z-20 size-full object-cover object-center opacity-55"
@@ -116,10 +116,10 @@ export default async function HomePage() {
         <div className="container-x grid items-center gap-10 md:grid-cols-5">
           <div className="md:col-span-2">
             <div className="relative mx-auto aspect-4/5 max-w-sm overflow-hidden rounded-3xl bg-navy-100 shadow-xl">
-              <Img src={s.leaderPhoto || "/images/pelayanan-batang.jpg"} alt={s.leaderPhoto ? s.leaderName : "Dokumentasi pelayanan kepolisian Batang"} className="size-full object-cover" />
+              <Img src={s.leaderPhoto || "/images/polisi-penolong-batang.jpg"} alt={s.leaderPhoto ? s.leaderName : "Polwan Batang berlatih memadamkan api dalam kegiatan polisi penolong"} className="size-full object-cover" />
               <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-navy-950/90 to-transparent p-5 text-white">
-                <p className="font-bold">{s.leaderName}</p>
-                <p className="text-xs text-navy-200">{s.leaderTitle}</p>
+                <p className="font-bold">{s.leaderPhoto ? s.leaderName : "Siap hadir, siap menolong"}</p>
+                <p className="text-xs text-navy-200">{s.leaderPhoto ? s.leaderTitle : "Dokumentasi pelatihan personel Batang"}</p>
               </div>
             </div>
           </div>
