@@ -52,3 +52,13 @@ Dokumentasi: [Koneksi PostgreSQL Supabase](https://supabase.com/docs/guides/data
 `npm run storage:migrate` menyalin hanya file lokal yang masih direferensikan oleh berita, galeri, dokumen, atau pengaturan. Nama file dan URL /uploads/ dipertahankan. Skrip memverifikasi SHA-256 hasil unduhan, menolak penimpaan file berbeda, dan tidak menghapus file sumber. DATA_DIR hanya diperlukan jika folder unggahan lama berada di lokasi khusus.
 
 Bucket dapat dibuat ulang pada proyek baru melalui storage:setup. Tidak ada policy Storage yang memberi akses tulis/hapus kepada anon atau authenticated; Server Actions memeriksa login admin sebelum memakai client server. Pemeriksaan check:storage menguji izin tersebut dan membersihkan semua objek ujinya.
+
+## Vercel
+
+Atur environment production dan preview: DATABASE_URL (atau POSTGRES_URL), AUTH_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_STORAGE_BUCKET, dan SITE_URL. Seluruh koneksi harus menunjuk proyek Supabase yang sama. Environment lokal tidak otomatis ikut saat git push. Setelah mengubah environment, lakukan deployment ulang; untuk perubahan NEXT_PUBLIC_ gunakan build baru tanpa cache.
+
+Unggahan dashboard dibatasi total 3 MB per pengiriman agar sesuai batas request Vercel (bucket Storage masih membatasi maksimum 10 MB sebagai lapisan tambahan). Region fungsi diatur hnd1, dekat database Tokyo.
+
+Uji produksi: TEST_BASE_URL=https://DOMAIN node --env-file=.env.local scripts/check-deployment.mjs. Skrip memeriksa login, cookie Secure/HttpOnly, akses dashboard, foto Storage, sitemap, dan logout tanpa mencetak kredensial. smoke.mjs serta test-dashboard-uploads.mjs juga menerima TEST_BASE_URL.
+
+Jika integrasi Vercel memasang proyek Supabase berbeda, atur SUPABASE_STORAGE_URL dan SUPABASE_STORAGE_SECRET_KEY ke proyek yang menyimpan bucket website-media. Kedua nama server ini didahulukan agar tidak berbenturan dengan environment integrasi.

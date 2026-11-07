@@ -65,7 +65,7 @@ export function NewsForm({ news }: { news?: News }) {
             label="Foto utama"
             current={news?.image}
             removeName="removeImage"
-            hint="JPG, PNG, WebP, atau GIF. Maks. 10 MB."
+            hint="JPG, PNG, WebP, atau GIF. Maks. 3 MB."
           />
         </div>
         <FormMessage state={state} />

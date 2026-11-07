@@ -71,7 +71,7 @@ export async function addGalleryAction(_: FormState, fd: FormData): Promise<Form
   try {
     const files = fd.getAll("image").filter((f): f is File => f instanceof File && Boolean(f.name));
     if (!files.length) return { error: "Pilih minimal satu foto." };
-    if (files.length > 10 || files.reduce((total, f) => total + f.size, 0) > 10 * 1024 * 1024) return { error: "Maksimal 10 foto dengan total ukuran 10 MB per unggahan." };
+    if (files.length > 10 || files.reduce((total, f) => total + f.size, 0) > 3 * 1024 * 1024) return { error: "Maksimal 10 foto dengan total ukuran 3 MB per unggahan." };
     for (const file of files) await validateUpload(file, "image");
     for (const f of files) {
       const up = await saveUpload(f, "image");
@@ -164,7 +164,7 @@ export async function deleteMessageAction(fd: FormData) {
 export async function saveSettingsAction(_: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
   const images = [fd.get("heroImage"), fd.get("leaderPhoto")].filter((f): f is File => f instanceof File);
-  if (images.reduce((total, file) => total + file.size, 0) > 10 * 1024 * 1024) return { error: "Total ukuran foto beranda dan pimpinan maksimal 10 MB per penyimpanan." };
+  if (images.reduce((total, file) => total + file.size, 0) > 3 * 1024 * 1024) return { error: "Total ukuran foto beranda dan pimpinan maksimal 3 MB per penyimpanan." };
   const current = await db.getSettings();
   const next: Settings = { ...current };
   const textKeys = [

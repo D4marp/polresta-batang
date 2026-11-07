@@ -4,7 +4,7 @@ import { getStorageAdmin, STORAGE_BUCKET } from "./supabase/admin";
 
 const IMAGE_EXT = ["jpg", "jpeg", "png", "webp", "gif"];
 const DOC_EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"];
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = 3 * 1024 * 1024;
 
 export const MIME: Record<string, string> = {
   jpg: "image/jpeg",
@@ -28,7 +28,7 @@ export async function validateUpload(file: File, kind: UploadKind) {
   const allowed = kind === "image" ? IMAGE_EXT : DOC_EXT;
   if (!allowed.includes(ext)) throw new Error(`Format file tidak didukung. Gunakan: ${allowed.join(", ")}`);
   if (!file.size) throw new Error("File kosong tidak dapat diunggah.");
-  if (file.size > MAX_BYTES) throw new Error("Ukuran file maksimal 10 MB.");
+  if (file.size > MAX_BYTES) throw new Error("Ukuran file maksimal 3 MB.");
   const bytes = Buffer.from(await file.slice(0, 16).arrayBuffer());
   const valid = kind === "image"
     ? ext === "png" ? bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))
@@ -55,7 +55,10 @@ export async function saveUpload(
   const { error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).upload(name, buffer, {
     contentType: MIME[ext], cacheControl: "3600", upsert: false,
   });
-  if (error) throw new Error("File belum dapat diunggah ke Supabase Storage. Silakan coba kembali.");
+  if (error) {
+    console.error("Storage upload failed", { bucket: STORAGE_BUCKET, status: error.statusCode, message: error.message });
+    throw new Error("File belum dapat diunggah ke Supabase Storage. Silakan coba kembali.");
+  }
   return { url: `/uploads/${name}`, size: file.size };
 }
 

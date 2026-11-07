@@ -15,6 +15,7 @@ export async function GET(
   try {
     const { data, error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).download(name);
     if (error || !data) {
+      console.error("Storage download failed", { bucket: STORAGE_BUCKET, status: error?.statusCode, message: error?.message });
       const missing = error && "statusCode" in error && ["404", "400"].includes(String(error.statusCode));
       return new Response(missing ? "Not found" : "Storage unavailable", { status: missing ? 404 : 503 });
     }

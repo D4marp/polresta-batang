@@ -39,9 +39,9 @@ export function SettingsForm({ s }: { s: Settings }) {
     <form action={action} onSubmit={(event) => {
       const data = new FormData(event.currentTarget);
       const total = [data.get("heroImage"), data.get("leaderPhoto")].reduce<number>((sum, file) => sum + (file instanceof File ? file.size : 0), 0);
-      if (total > 10 * 1024 * 1024) {
+      if (total > 3 * 1024 * 1024) {
         event.preventDefault();
-        setUploadError("Total ukuran foto beranda dan pimpinan maksimal 10 MB per penyimpanan.");
+        setUploadError("Total ukuran foto beranda dan pimpinan maksimal 3 MB per penyimpanan.");
       } else setUploadError(undefined);
     }} className="space-y-6">
       <section className="card space-y-5 p-6">

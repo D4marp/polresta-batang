@@ -18,7 +18,7 @@ export function GalleryUploadForm() {
         <label className="label" htmlFor="title">Judul / keterangan *</label>
         <input id="title" name="title" required maxLength={300} className="input" />
       </div>
-      <FileField name="image" label="Foto (bisa pilih banyak)" required multiple hint="JPG, PNG, WebP, GIF. Maksimal 10 foto dengan total ukuran 10 MB per unggahan." />
+      <FileField name="image" label="Foto (bisa pilih banyak)" required multiple hint="JPG, PNG, WebP, GIF. Maksimal 10 foto dengan total ukuran 3 MB per unggahan." />
       <FormMessage state={state} success="Foto berhasil diunggah." />
       <SubmitButton pendingText="Mengunggah...">Unggah</SubmitButton>
     </form>
@@ -43,7 +43,7 @@ export function DocumentUploadForm() {
         required
         label="File"
         accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-        hint="PDF, Word, Excel, atau PowerPoint. Maks. 10 MB."
+        hint="PDF, Word, Excel, atau PowerPoint. Maks. 3 MB."
       />
       <FormMessage state={state} success="Dokumen berhasil diunggah." />
       <SubmitButton pendingText="Mengunggah...">Unggah</SubmitButton>

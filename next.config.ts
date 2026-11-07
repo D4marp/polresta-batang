@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pg"],
   outputFileTracingIncludes: { "/*": ["./certificates/supabase-ca.crt"] },
   experimental: {
-    serverActions: { bodySizeLimit: "12mb" },
+    serverActions: { bodySizeLimit: "4mb" },
   },
   turbopack: {
     rules: {

@@ -7,7 +7,8 @@ export const mime = {
  ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 };
 export function storageClient() {
- const key=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
- if(!key||!process.env.NEXT_PUBLIC_SUPABASE_URL) throw new Error('SUPABASE_SECRET_KEY server belum diatur.');
- return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,key,{auth:{persistSession:false,autoRefreshToken:false}});
+ const key=process.env.SUPABASE_STORAGE_SECRET_KEY||process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
+ const url=process.env.SUPABASE_STORAGE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL;
+ if(!key||!url) throw new Error('Kunci server Storage belum diatur.');
+ return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
 }

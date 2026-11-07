@@ -1,8 +1,8 @@
 ﻿import { createHmac } from 'node:crypto';
-const base='http://localhost:3000';
+const base=process.env.TEST_BASE_URL || 'http://localhost:3000';
 const routes=['/','/profil','/layanan','/berita','/galeri','/unduhan','/pengaduan','/login','/robots.txt','/sitemap.xml','/layanan/skck','/layanan/sim','/layanan/stnk-bpkb','/layanan/spkt','/berita/polresta-batang-gelar-apel-pagi-kesiapan-operasi'];
 let fail=0;
-for(const route of routes){const r=await fetch(base+route);const t=await r.text();const ok=r.status===200&&!t.includes('NEXT_HTTP_ERROR_FALLBACK;500')&&!t.includes('Internal Server Error');if(!ok)fail++;console.log(`${ok?'PASS':'FAIL'} ${route} (${r.status})`);}
+for(const route of routes){const r=await fetch(base+route);const t=await r.text();const ok=r.status===200&&!t.includes('NEXT_HTTP_ERROR_FALLBACK;500')&&!t.includes('Internal Server Error')&&!t.includes(':E{\"digest\"');if(!ok)fail++;console.log(`${ok?'PASS':'FAIL'} ${route} (${r.status})`);}
 for(const route of ['/dashboard','/dashboard/berita','/dashboard/berita/baru','/dashboard/berita/invalid','/dashboard/galeri','/dashboard/dokumen','/dashboard/pesan','/dashboard/pengaturan']){const r=await fetch(base+route,{redirect:'manual'});const body=await r.text();const ok=([303,307].includes(r.status)&&r.headers.get('location')?.includes('/login') || body.includes('NEXT_REDIRECT;replace;/login;307;')) && !body.includes('Kesiapan Konten Publikasi') && !body.includes('Simpan Pengaturan');if(!ok)fail++;console.log(`${ok?'PASS':'FAIL'} protected ${route}`);}
 const payload=Buffer.from(JSON.stringify({u:process.env.ADMIN_USERNAME,exp:Date.now()+60000})).toString('base64url');
 const signature=createHmac('sha256',process.env.AUTH_SECRET).update(payload).digest('base64url');

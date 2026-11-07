@@ -6,7 +6,7 @@ for (const key of ['DATABASE_URL','NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABA
 if ((process.env.AUTH_SECRET?.length??0)<32) issues.push('AUTH_SECRET minimal 32 karakter untuk produksi');
 if ((process.env.ADMIN_PASSWORD?.length??0)<12) issues.push('ADMIN_PASSWORD minimal 12 karakter untuk produksi');
 try {if(new URL(process.env.SITE_URL).protocol!=='https:')throw new Error();}catch{issues.push('SITE_URL harus berupa domain HTTPS produksi');}
-if(!process.env.SUPABASE_SECRET_KEY&&!process.env.SUPABASE_SERVICE_ROLE_KEY)issues.push('Kunci server Supabase Storage belum diatur');
+if(!process.env.SUPABASE_STORAGE_SECRET_KEY&&!process.env.SUPABASE_SECRET_KEY&&!process.env.SUPABASE_SERVICE_ROLE_KEY)issues.push('Kunci server Supabase Storage belum diatur');
 try{const {data,error}=await storageClient().storage.getBucket(bucket);if(error||!data||data.public||Number(data.file_size_limit)!==10*1024*1024)issues.push('Bucket Storage privat dengan batas 10 MB belum siap');}catch{issues.push('Koneksi Supabase Storage belum siap');}
 let pool;
 try{

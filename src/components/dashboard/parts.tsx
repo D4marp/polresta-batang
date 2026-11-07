@@ -83,7 +83,7 @@ export function FileField({
           const allowed = accept.split(",").map(v => v.trim().toLowerCase());
           const invalid = files.some(f => !allowed.includes(`.${f.name.split(".").pop()?.toLowerCase()}`));
           const total = files.reduce((sum, f) => sum + f.size, 0);
-          const error = invalid ? "Format file tidak didukung. Pilih format sesuai keterangan." : files.some(f => !f.size) ? "File kosong tidak dapat diunggah." : total > 10 * 1024 * 1024 || files.length > 10 ? "Maksimal 10 file dengan total ukuran 10 MB." : "";
+          const error = invalid ? "Format file tidak didukung. Pilih format sesuai keterangan." : files.some(f => !f.size) ? "File kosong tidak dapat diunggah." : total > 3 * 1024 * 1024 || files.length > 10 ? "Maksimal 10 file dengan total ukuran 3 MB." : "";
           e.target.setCustomValidity(error);
           if (error) e.target.reportValidity();
           setSelection(files.length ? `${files.length} file dipilih · ${(total / 1024 / 1024).toFixed(2)} MB` : "");
