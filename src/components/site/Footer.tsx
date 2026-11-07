@@ -1,83 +1,9 @@
-import Link from "next/link";
-import { Mail, MapPin, Phone, Shield } from "lucide-react";
-import type { Settings } from "@/lib/types";
+﻿import Link from "next/link";
+import { ArrowUpRight, Mail, MapPin } from "lucide-react";
+import { Img } from "@/components/Img";
+import { NEWS_CATEGORIES, type Settings } from "@/lib/types";
 
-export function Footer({ s }: { s: Settings }) {
-  const socials = [
-    { label: "Instagram", href: s.instagram },
-    { label: "Facebook", href: s.facebook },
-    { label: "YouTube", href: s.youtube },
-  ].filter((x) => x.href && !/^https?:\/\/(www\.)?(instagram|facebook|youtube)\.com\/?$/.test(x.href));
-
-  return (
-    <footer className="mt-24 bg-navy-950 text-navy-100">
-      <div className="container-x grid gap-10 py-14 md:grid-cols-4">
-        <div className="md:col-span-2">
-          <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-gold-500 text-navy-950">
-              <Shield className="size-5" />
-            </span>
-            <span className="text-lg font-extrabold tracking-tight text-white">
-              {s.name.toUpperCase()}
-            </span>
-          </div>
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-navy-200">{s.tagline}</p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            {socials.map((x) => (
-              <a
-                key={x.label}
-                href={x.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/10"
-              >
-                {x.label}
-              </a>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gold-400">Tautan</h3>
-          <ul className="mt-4 space-y-2.5 text-sm">
-            {[
-              ["/profil", "Profil"],
-              ["/layanan", "Layanan Publik"],
-              ["/berita", "Berita"],
-              ["/galeri", "Galeri"],
-              ["/unduhan", "Unduhan"],
-              ["/pengaduan", "Kontak & Pengaduan"],
-            ].map(([href, label]) => (
-              <li key={href}>
-                <Link href={href} className="text-navy-200 transition hover:text-white">
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gold-400">Kontak</h3>
-          <ul className="mt-4 space-y-3 text-sm text-navy-200">
-            <li className="flex gap-2.5">
-              <MapPin className="mt-0.5 size-4 shrink-0 text-gold-400" /> {s.address}
-            </li>
-            <li className="flex gap-2.5">
-              <Phone className="size-4 shrink-0 text-gold-400" /> {s.phone}
-            </li>
-            <li className="flex gap-2.5">
-              <Mail className="size-4 shrink-0 text-gold-400" /> {s.email}
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div className="border-t border-white/10 py-5 text-center text-xs text-navy-300">
-        © {new Date().getFullYear()} {s.name}. Hak cipta dilindungi.
-        <Link href="/login" className="ml-3 opacity-60 hover:opacity-100">
-          Admin
-        </Link>
-      </div>
-    </footer>
-  );
+export function Footer({s}:{s:Settings}) {
+ const socials=[{label:'Instagram',href:s.instagram},{label:'Facebook',href:s.facebook},{label:'YouTube',href:s.youtube}].filter(x=>x.href&&!/^https?:\/\/(www\.)?(instagram|facebook|youtube)\.com\/?$/.test(x.href));
+ return <footer className="mt-14 border-t-4 border-navy-950 bg-slate-50"><div className="container-x grid gap-9 py-10 md:grid-cols-[1.5fr_1fr_1fr]"><div><Link href="/" className="flex items-center gap-3"><Img src="/logo.png" alt="Lambang Polda Jawa Tengah" className="h-14 w-11 object-contain" /><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-red-700">Portal berita kepolisian</p><p className="mt-1 text-xl font-extrabold uppercase tracking-tight text-navy-950">{s.name}</p></div></Link><p className="mt-4 max-w-sm text-xs leading-6 text-slate-500">Kabar kegiatan kepolisian, informasi kamtibmas, dan agenda pelayanan masyarakat di Kabupaten Batang.</p><div className="mt-4 flex flex-wrap gap-4">{socials.map(x=><a href={x.href} key={x.label} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[11px] font-bold text-navy-900 hover:text-red-700">{x.label}<ArrowUpRight className="size-3" /></a>)}</div></div><div><h2 className="border-b border-slate-200 pb-3 text-[10px] font-bold uppercase tracking-[.18em] text-navy-900">Rubrik berita</h2><ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">{NEWS_CATEGORIES.map(c=><li key={c}><Link href={`/berita?kategori=${encodeURIComponent(c)}`} className="text-xs text-slate-500 hover:text-red-700">{c}</Link></li>)}</ul></div><div><h2 className="border-b border-slate-200 pb-3 text-[10px] font-bold uppercase tracking-[.18em] text-navy-900">Hubungi satuan</h2><p className="mt-4 flex gap-2 text-xs leading-6 text-slate-500"><MapPin className="mt-1 size-3.5 shrink-0" />{s.address}</p><a href={`mailto:${s.email}`} className="mt-2 flex items-center gap-2 break-all text-xs text-slate-500 hover:text-red-700"><Mail className="size-3.5 shrink-0" />{s.email}</a><Link href="/pengaduan" className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-navy-900">Kontak & pengaduan <ArrowUpRight className="size-3" /></Link></div></div><div className="border-t border-slate-200"><div className="container-x flex flex-wrap items-center justify-between gap-3 py-5 text-[10px] text-slate-500"><p>© {new Date().getFullYear()} {s.name}. Hak cipta dilindungi.</p><nav aria-label="Tautan footer" className="flex flex-wrap gap-5"><Link href="/profil" className="hover:text-red-700">Profil</Link><Link href="/layanan" className="hover:text-red-700">Layanan</Link><Link href="/login" className="font-semibold text-navy-900 hover:text-red-700">Login redaksi</Link></nav></div></div></footer>;
 }

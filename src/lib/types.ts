@@ -64,6 +64,7 @@ export interface Settings {
 }
 
 export const NEWS_CATEGORIES = [
+  "Kapolresta",
   "Kegiatan",
   "Kamtibmas",
   "Lalu Lintas",

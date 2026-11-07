@@ -4,7 +4,6 @@ import { FileText, Images, Mail, Newspaper, Plus, ArrowUpRight, CheckCircle2, Ci
 import { PageHeader } from "@/components/dashboard/parts";
 import { getSettings, listDocuments, listGallery, listMessages, listNews } from "@/lib/db";
 import { formatDate } from "@/lib/format";
-import { Img } from "@/components/Img";
 
 export default async function DashboardHome() {
   await requireAdmin();
@@ -22,7 +21,7 @@ export default async function DashboardHome() {
     { label: "Pesan Masuk", value: messages.length, sub: `${messages.filter((m) => !m.read).length} belum dibaca`, icon: Mail, href: "/dashboard/pesan" },
   ];
   const checks = [
-    { label: "Foto utama beranda", done: Boolean(settings.heroImage), href: "/dashboard/pengaturan" },
+    { label: "Berita utama memiliki foto", done: Boolean(news.find(n=>n.status === "published")?.image), href: "/dashboard/berita" },
     { label: "Foto dan identitas pimpinan", done: Boolean(settings.leaderPhoto) && settings.leaderName !== "Kapolresta Batang", href: "/dashboard/pengaturan" },
     { label: "Kontak satuan sudah dilengkapi", done: Boolean(settings.phone && !settings.phone.includes("000000") && settings.email && settings.mapsEmbed), href: "/dashboard/pengaturan" },
     { label: "Berita resmi dengan foto", done: news.some(n => n.status === "published" && n.image && !n.content.includes("contoh konten awal")), href: "/dashboard/berita" },
@@ -34,15 +33,15 @@ export default async function DashboardHome() {
   return (
     <>
       <PageHeader
-        title="Ringkasan"
-        desc={`Selamat datang di ruang kerja administrasi ${settings.name}.`}
+        title="Meja redaksi"
+        desc={`Selamat datang di ruang redaksi ${settings.name}.`}
         action={
           <Link href="/dashboard/berita/baru" className="btn-primary">
             <Plus className="size-4" /> Tulis Berita
           </Link>
         }
       />
-      <section className="dashboard-welcome relative mb-7 overflow-hidden rounded-2xl p-6 text-white sm:p-8"><div aria-hidden className="pointer-events-none absolute -right-5 -top-8 grid size-72 place-items-center rounded-full border border-white/5 p-12"><div className="grid size-full place-items-center rounded-full border border-white/10 p-8"><Img src="/logo.png" alt="" className="size-full object-contain opacity-15" /></div></div><div className="relative max-w-xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-gold-300">Pusat pengelolaan website</p><h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">Informasi terawat.<br />Pelayanan semakin dekat.</h2><p className="mt-3 max-w-md text-sm leading-6 text-navy-200">Kelola informasi dan dokumentasi satuan agar selalu mudah diakses masyarakat.</p><Link href="/" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-gold-300 transition hover:text-white">Pratinjau website <ArrowUpRight className="size-4" /></Link></div></section>
+      <section className="card mb-7 flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-red-700 p-5"><div><p className="text-[10px] font-bold uppercase tracking-widest text-red-700">Status publikasi</p><h2 className="mt-2 text-lg font-bold text-navy-900">{news.filter(n=>n.status==='published').length} berita terbit <span className="mx-2 font-normal text-slate-300">/</span> {news.filter(n=>n.status==='draft').length} draf</h2><p className="mt-1 text-xs text-slate-500">Berita terbaru yang terbit otomatis menjadi headline portal.</p></div><Link href="/dashboard/berita" className="btn-ghost text-xs">Kelola berita <ArrowUpRight className="size-4" /></Link></section>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map(({ label, value, sub, icon: Icon, href }, index) => (
           <Link key={label} href={href} className="card group p-5 transition hover:-translate-y-0.5 hover:border-navy-200 hover:shadow-md">

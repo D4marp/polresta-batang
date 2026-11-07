@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { saveSettingsAction } from "@/actions/content";
 import { FormMessage, SubmitButton } from "@/components/ui";
 import { FileField } from "./parts";
@@ -66,10 +67,11 @@ export function SettingsForm({ s }: { s: Settings }) {
       </section>
 
       <section className="card space-y-5 p-6">
-        <h2 className="font-bold text-navy-900">Halaman Beranda</h2>
-        <Field name="heroTitle" label="Judul utama" value={s.heroTitle} />
-        <Field name="heroSubtitle" label="Sub-judul" value={s.heroSubtitle} rows={3} />
-        <FileField name="heroImage" label="Gambar latar hero" current={s.heroImage} removeName="remove_heroImage" />
+        <h2 className="font-bold text-navy-900">Beranda portal berita</h2>
+        <input type="hidden" name="heroTitle" value={s.heroTitle} />
+        <input type="hidden" name="heroSubtitle" value={s.heroSubtitle} />
+        <p className="text-sm leading-6 text-slate-500">Headline otomatis menampilkan berita terbit paling baru. Judul, ringkasan, dan foto utama diambil dari berita tersebut. Pilih kategori Kapolresta agar artikel juga tampil pada rubrik pimpinan.</p>
+        <Link href="/dashboard/berita" className="btn-ghost">Kelola berita beranda</Link>
       </section>
 
       <section className="card space-y-5 p-6">

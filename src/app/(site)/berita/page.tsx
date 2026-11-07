@@ -29,7 +29,7 @@ export default async function BeritaPage({ searchParams }: Props) {
 
   return (
     <>
-      <PageHero title="Berita" subtitle="Kabar terbaru kegiatan dan informasi Polresta Batang." />
+      <PageHero title={kategori || "Arsip berita"} subtitle={q ? `Hasil pencarian untuk “${q}”.` : "Kabar kepolisian, agenda Kapolresta, dan informasi masyarakat Batang."} />
       <div className="container-x py-12">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
@@ -37,7 +37,8 @@ export default async function BeritaPage({ searchParams }: Props) {
               <Link
                 key={c ?? "all"}
                 href={href({ kategori: c })}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                aria-current={(kategori ?? undefined) === c ? "page" : undefined}
+                className={`rounded-sm px-4 py-2 text-xs font-semibold transition ${
                   (kategori ?? undefined) === c
                     ? "bg-navy-800 text-white"
                     : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100"
@@ -61,6 +62,8 @@ export default async function BeritaPage({ searchParams }: Props) {
           </form>
         </div>
 
+        <p className="mb-6 border-b border-slate-200 pb-4 text-[11px] text-slate-400">{all.length} berita ditemukan{q ? ` untuk “${q}”` : ""}</p>
+
         {items.length ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((n) => (
@@ -77,6 +80,7 @@ export default async function BeritaPage({ searchParams }: Props) {
               <Link
                 key={p}
                 href={href({ page: p })}
+                aria-current={p === current ? "page" : undefined}
                 className={`grid size-10 place-items-center rounded-xl text-sm font-semibold ${
                   p === current
                     ? "bg-navy-800 text-white"

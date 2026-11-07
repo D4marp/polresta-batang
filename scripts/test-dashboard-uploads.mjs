@@ -36,7 +36,7 @@ try{
  await submit('/dashboard/berita/'+news[0].id,'image',{id:news[0].id,title:marker,content:'Konten uji hapus foto.',status:'draft',category:'Kegiatan',removeImage:'on'});news=await rows('news');assert.equal(news[0].image,null);assert.equal((await fetch(base+replaced+"?verify="+randomUUID())).status,404);pass('opsi hapus foto berita berfungsi');
  const beforeSettings=(await pool.query("SELECT value FROM settings WHERE key='main'")).rows;
  const beforeFiles=await files();
- t=await submit('/dashboard/pengaturan','heroImage',{name:'Uji validasi',heroTitle:'Uji validasi',hotline:'110'},[['heroImage',png,'hero.png'],['leaderPhoto',Buffer.from('bukan foto'),'pimpinan.png']]);
+ t=await submit('/dashboard/pengaturan','heroTitle',{name:'Uji validasi',heroTitle:'Uji validasi',hotline:'110'},[['heroImage',png,'hero.png'],['leaderPhoto',Buffer.from('bukan foto'),'pimpinan.png']]);
  assert.match(t,/Isi file tidak sesuai format/);assert.deepEqual((await pool.query("SELECT value FROM settings WHERE key='main'")).rows,beforeSettings);assert.deepEqual(await files(),beforeFiles);pass('pengaturan gagal pada foto kedua: file pertama dibersihkan dan data asli tetap utuh');
  await submit('/pengaduan','message',{name:marker,subject:marker,message:'Pesan uji migrasi Supabase.'},[],false);
  let messages=(await pool.query('SELECT * FROM messages WHERE subject=$1',[marker])).rows;assert.equal(messages.length,1);assert.equal(messages[0].read,false);pass('formulir pengaduan tersimpan di Supabase sebagai belum dibaca');

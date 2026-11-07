@@ -62,3 +62,9 @@ Unggahan dashboard dibatasi total 3 MB per pengiriman agar sesuai batas request 
 Uji produksi: TEST_BASE_URL=https://DOMAIN node --env-file=.env.local scripts/check-deployment.mjs. Skrip memeriksa login, cookie Secure/HttpOnly, akses dashboard, foto Storage, sitemap, dan logout tanpa mencetak kredensial. smoke.mjs serta test-dashboard-uploads.mjs juga menerima TEST_BASE_URL.
 
 Jika integrasi Vercel memasang proyek Supabase berbeda, atur SUPABASE_STORAGE_URL dan SUPABASE_STORAGE_SECRET_KEY ke proyek yang menyimpan bucket website-media. Kedua nama server ini didahulukan agar tidak berbenturan dengan environment integrasi.
+
+## Portal berita
+
+Beranda menampilkan berita berstatus terbit yang paling baru sebagai headline, diikuti sorotan, daftar berita, papan pengumuman, dan arsip foto. Rubrik Kapolresta tersedia pada editor dan navigasi portal; artikel di rubrik tersebut juga masuk ke kolom Kabar Kapolresta. Judul yang menyebut Kapolres/Kapolresta ikut ditampilkan pada kolom tersebut.
+
+Foto utama berasal dari berita. Jika foto belum diunggah, portal menampilkan dokumentasi umum berlabel Ilustrasi, termasuk keterangan pembeda pada halaman artikel. Data profil pimpinan diatur melalui Pengaturan dan ditampilkan pada Profil serta kolom pimpinan.

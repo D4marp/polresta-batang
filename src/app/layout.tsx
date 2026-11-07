@@ -11,11 +11,12 @@ export const metadata: Metadata = {
   ...(process.env.SITE_URL ? { metadataBase: new URL(process.env.SITE_URL) } : {}),
   icons: { icon: "/logo.png", apple: "/logo.png" },
   title: {
-    default: "Polresta Batang — Website Resmi",
+    default: "Polresta Batang — Portal Berita Kepolisian",
     template: "%s | Polresta Batang",
   },
   description:
-    "Website resmi Polresta Batang: berita, layanan publik, dan informasi kepolisian di Kabupaten Batang.",
+    "Portal berita Polresta Batang: kabar kepolisian, kegiatan Kapolresta, informasi kamtibmas, dan pelayanan masyarakat Kabupaten Batang.",
+  openGraph: { siteName: "Polresta Batang", locale: "id_ID", type: "website" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
