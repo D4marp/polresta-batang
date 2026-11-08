@@ -26,7 +26,7 @@ export default async function GaleriPage() {
         ) : (
           <p className="card p-10 text-center text-slate-500">Belum ada foto di galeri.</p>
         )}
-        <section id="video" className="mt-12 scroll-mt-8 border-t border-slate-200 pt-8"><h2 className="mb-5 text-xl font-bold text-navy-900">Galeri video</h2>{videos.length ? <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{videos.map(v => <VideoCard key={v.id} title={v.title} url={v.url} description={v.description} thumbnail={v.thumbnail} />)}</div> : <p className="card p-10 text-center text-slate-500">Dokumentasi video akan tampil di sini setelah ditambahkan oleh redaksi.</p>}</section>
+        <section id="video" className="mt-12 scroll-mt-8 border-t border-slate-200 pt-8"><h2 className="mb-5 text-xl font-bold text-navy-900">Galeri video</h2>{videos.length ? <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{videos.map(v => <VideoCard key={v.id} title={v.title} url={v.url} description={v.description} thumbnail={v.thumbnail} detailHref={`/video/${v.id}`} />)}</div> : <p className="card p-10 text-center text-slate-500">Dokumentasi video akan tampil di sini setelah ditambahkan oleh redaksi.</p>}</section>
       </div>
     </>
   );

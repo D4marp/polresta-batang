@@ -203,7 +203,7 @@ export async function updateDocument(id:string,title:string,file:string,size:num
  return (await query("UPDATE documents SET title=@v1,file=@v2,size=@v3 WHERE id=@v0 RETURNING id",[id,title,file,size])).length > 0;
 }
 export async function getVideoById(id:string) {
- const [r] = await query<{id:string;title:string;url:string;description:string;thumbnail:string}>("SELECT id,title,url,description,thumbnail FROM videos WHERE id=@v0",[id]);
+ const [r] = await query<{id:string;title:string;url:string;description:string;thumbnail:string;created_at:Date}>("SELECT id,title,url,description,thumbnail,created_at FROM videos WHERE id=@v0",[id]);
  return r;
 }
 export async function updateVideo(id:string,title:string,url:string,description = "",thumbnail = "") {
