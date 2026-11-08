@@ -1,6 +1,6 @@
 "use server";
 
-import { parseVideoUrl } from "@/lib/video";
+import { parseVideoUrl, validThumbnailUrl } from "@/lib/video";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
@@ -214,7 +214,12 @@ export async function addVideoAction(_: FormState, fd: FormData): Promise<FormSt
  if (!title || title.length > 300) return {error:"Judul video wajib diisi, maksimal 300 karakter."};
  const video = parseVideoUrl(str(fd, "url"));
  if (!video) return {error:"Gunakan URL video HTTPS dari YouTube, Vimeo, Instagram, Facebook, atau TikTok yang valid."};
- try { await db.addVideo(title, video.url); }
+
+ const description=str(fd,"description");
+ const thumbnail=str(fd,"thumbnail");
+ if(description.length>5000)return {error:"Narasi maksimal 5000 karakter."};
+ if(!validThumbnailUrl(thumbnail))return {error:"URL thumbnail harus berupa alamat gambar HTTPS yang valid."};
+ try { await db.addVideo(title, video.url, description, thumbnail); }
  catch { return {error:"Video belum dapat disimpan. Silakan coba kembali."}; }
  refresh();
  return {ok:true};
@@ -265,8 +270,13 @@ export async function editVideoAction(_:FormState,fd:FormData):Promise<FormState
  if (!title || title.length > 300) return {error:"Judul wajib diisi, maksimal 300 karakter."};
  const video=parseVideoUrl(str(fd,"url"));
  if (!video) return {error:"Gunakan URL video HTTPS dari YouTube, Vimeo, Instagram, Facebook, atau TikTok yang valid."};
+
+ const description=str(fd,"description");
+ const thumbnail=str(fd,"thumbnail");
+ if(description.length>5000)return {error:"Narasi maksimal 5000 karakter."};
+ if(!validThumbnailUrl(thumbnail))return {error:"URL thumbnail harus berupa alamat gambar HTTPS yang valid."};
  try {
-  if (!await db.updateVideo(str(fd,"id"),title,video.url)) return {error:"Video tidak ditemukan. Kembali ke daftar dan muat ulang halaman."};
+  if (!await db.updateVideo(str(fd,"id"),title,video.url,description,thumbnail)) return {error:"Video tidak ditemukan. Kembali ke daftar dan muat ulang halaman."};
  } catch {return {error:"Perubahan video belum dapat disimpan. Silakan coba kembali."};}
  refresh();
  redirect("/dashboard/video");

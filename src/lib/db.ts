@@ -177,11 +177,11 @@ export async function deleteMessage(id: string) {
 
 /* ---------- Video links ---------- */
 export async function listVideos() {
- const rows = await query<{id: string; title: string; url: string; created_at: Date}>("SELECT * FROM videos ORDER BY created_at DESC");
- return rows.map(r => ({id:r.id, title:r.title, url:r.url, createdAt:iso(r.created_at)}));
+ const rows = await query<{id: string; title: string; url: string; description:string; thumbnail:string; created_at: Date}>("SELECT * FROM videos ORDER BY created_at DESC");
+ return rows.map(r => ({id:r.id, title:r.title, url:r.url, description:r.description, thumbnail:r.thumbnail, createdAt:iso(r.created_at)}));
 }
-export async function addVideo(title: string, url: string) {
- await query("INSERT INTO videos (id,title,url) VALUES (@v0,@v1,@v2)", [randomUUID(),title,url]);
+export async function addVideo(title: string, url: string, description = "", thumbnail = "") {
+ await query("INSERT INTO videos (id,title,url,description,thumbnail) VALUES (@v0,@v1,@v2,@v3,@v4)", [randomUUID(),title,url,description,thumbnail]);
 }
 export async function deleteVideo(id: string) {
  await query("DELETE FROM videos WHERE id=@v0", [id]);
@@ -203,9 +203,9 @@ export async function updateDocument(id:string,title:string,file:string,size:num
  return (await query("UPDATE documents SET title=@v1,file=@v2,size=@v3 WHERE id=@v0 RETURNING id",[id,title,file,size])).length > 0;
 }
 export async function getVideoById(id:string) {
- const [r] = await query<{id:string;title:string;url:string}>("SELECT id,title,url FROM videos WHERE id=@v0",[id]);
+ const [r] = await query<{id:string;title:string;url:string;description:string;thumbnail:string}>("SELECT id,title,url,description,thumbnail FROM videos WHERE id=@v0",[id]);
  return r;
 }
-export async function updateVideo(id:string,title:string,url:string) {
- return (await query("UPDATE videos SET title=@v1,url=@v2 WHERE id=@v0 RETURNING id",[id,title,url])).length > 0;
+export async function updateVideo(id:string,title:string,url:string,description = "",thumbnail = "") {
+ return (await query("UPDATE videos SET title=@v1,url=@v2,description=@v3,thumbnail=@v4 WHERE id=@v0 RETURNING id",[id,title,url,description,thumbnail])).length > 0;
 }

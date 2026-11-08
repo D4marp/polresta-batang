@@ -23,11 +23,19 @@ try {
  for(const url of ['javascript:alert(1)','http://youtu.be/M7lc1UVf-VE','https://youtube.com.evil.test/watch?v=M7lc1UVf-VE','https://www.youtube.com/watch?v=bad']) {
   result=await submit('/dashboard/video','url',{title:marker,url});assert.match(result,/URL video HTTPS/);assert.equal((await rows('videos')).length,0);
  }console.log('PASS invalid URLs rejected');
+ for(const extra of [{description:'x'.repeat(5001)},{thumbnail:'javascript:alert(1)'},{thumbnail:'http://example.com/a.jpg'}]) {
+  const result=await submit('/dashboard/video','url',{title:marker,url:'https://youtu.be/M7lc1UVf-VE',...extra});assert.match(result,/Narasi maksimal|URL thumbnail/);assert.equal((await rows('videos')).length,0);
+ }console.log('PASS narrative and thumbnail validation');
  const before=await files();
- await submit('/dashboard/video','url',{title:marker,url:'https://youtu.be/M7lc1UVf-VE?si=tracking'});
+ await submit('/dashboard/video','url',{title:marker,url:'https://youtu.be/M7lc1UVf-VE?si=tracking',description:marker+' narasi kegiatan\nBaris kedua.',thumbnail:''});
  let items=await rows('videos');assert.equal(items.length,1);assert.equal(items[0].url,'https://www.youtube.com/watch?v=M7lc1UVf-VE');
  assert.deepEqual(await files(),before);console.log('PASS URL saved without Storage upload');
- for(const path of ['/galeri','/']){const html=await(await fetch(base+path)).text();assert.ok(html.includes(marker));assert.ok(!html.includes('<iframe'));}console.log('PASS video appears publicly, player loads only on click');
+ assert.equal(items[0].description.replaceAll("\r\n","\n"),marker+' narasi kegiatan\nBaris kedua.');
+ for(const path of ['/galeri','/']){const html=await(await fetch(base+path)).text();assert.ok(html.includes(marker+' narasi kegiatan'));assert.ok(html.includes('https://i.ytimg.com/vi/M7lc1UVf-VE/hqdefault.jpg'));assert.ok(html.includes('Tonton di sini'));assert.ok(!html.includes('<iframe'));}console.log('PASS narrative and automatic thumbnail appear publicly; player loads on click');
+ const edit='/dashboard/video/'+items[0].id;
+ await submit(edit,'url',{id:items[0].id,title:marker,url:items[0].url,description:marker+' updated narrative',thumbnail:'https://i.ytimg.com/vi/M7lc1UVf-VE/mqdefault.jpg'});
+ items=await rows('videos');assert.equal(items[0].description,marker+' updated narrative');assert.equal(items[0].thumbnail,'https://i.ytimg.com/vi/M7lc1UVf-VE/mqdefault.jpg');
+ const editPage=await(await fetch(base+edit,{headers:{cookie}})).text();assert.ok(editPage.includes(marker+' updated narrative'));console.log('PASS narrative and thumbnail edit persistence');
  await submit('/dashboard/video','url',{title:marker,url:'https://www.instagram.com/p/TESTVIDEO/'});assert.equal((await rows('videos')).length,2);console.log('PASS Instagram link saved');
  for(const item of await rows('videos'))await submit('/dashboard/video','id',{id:item.id});
  assert.equal((await rows('videos')).length,0);assert.ok(!(await(await fetch(base+'/galeri')).text()).includes(marker));console.log('PASS admin deletion removes public entries');
