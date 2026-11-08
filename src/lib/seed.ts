@@ -46,7 +46,7 @@ export const seedNews: News[] = [
     content: lorem(
       "Polresta Batang menggelar apel pagi yang diikuti seluruh personel untuk mengecek kesiapan pasukan dan sarana prasarana.",
     ),
-    category: "Kegiatan",
+    category: "Kegiatan Polresta Batang",
     status: "published",
     author: "Humas Polresta Batang",
     createdAt: daysAgo(1),
@@ -61,7 +61,7 @@ export const seedNews: News[] = [
     content: lorem(
       "Satuan Lalu Lintas Polresta Batang memberikan edukasi keselamatan berlalu lintas kepada para pelajar.",
     ),
-    category: "Lalu Lintas",
+    category: "Kegiatan Polresta Batang",
     status: "published",
     author: "Humas Polresta Batang",
     createdAt: daysAgo(3),
@@ -76,7 +76,7 @@ export const seedNews: News[] = [
     content: lorem(
       "Bhabinkamtibmas melaksanakan kegiatan sambang kepada warga desa binaan untuk menjaga situasi kamtibmas.",
     ),
-    category: "Binmas",
+    category: "Kegiatan Polresta Batang",
     status: "published",
     author: "Humas Polresta Batang",
     createdAt: daysAgo(5),
@@ -91,7 +91,7 @@ export const seedNews: News[] = [
     content: lorem(
       "Polresta Batang mengingatkan masyarakat bahwa layanan SKCK dan SIM tersedia setiap hari kerja.",
     ),
-    category: "Pengumuman",
+    category: "Himbauan Kamtibmas",
     status: "published",
     author: "Humas Polresta Batang",
     createdAt: daysAgo(7),

@@ -1,6 +1,7 @@
 "use server";
 
 import { parseVideoUrl, validThumbnailUrl } from "@/lib/video";
+import { canonicalNewsCategory } from "@/lib/categories";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
@@ -22,6 +23,8 @@ export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormSt
   if (!title || !content) return { error: "Judul dan isi berita wajib diisi." };
   if (title.length > 300 || content.length > 100000 || str(fd, "excerpt").length > 500 || str(fd, "category").length > 60) return { error: "Judul, ringkasan, kategori, atau isi berita terlalu panjang." };
 
+  const category=canonicalNewsCategory(str(fd,"category"));
+  if(!category)return {error:"Pilih salah satu dari empat kategori berita yang tersedia."};
   let uploaded: string | undefined;
   try {
     const existing = id ? await db.getNewsById(id) : undefined;
@@ -40,7 +43,7 @@ export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormSt
       title,
       content,
       excerpt,
-      category: str(fd, "category") || "Kegiatan Polresta Batang",
+      category,
       status: (str(fd, "status") === "draft" ? "draft" : "published") as NewsStatus,
       author: existing?.author ?? session.username,
       image,

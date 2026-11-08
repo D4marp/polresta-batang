@@ -63,13 +63,4 @@ export interface Settings {
   mapsEmbed: string;
 }
 
-export const PRIMARY_NEWS_CATEGORIES = ["Kegiatan Polresta Batang", "Kriminal", "Himbauan", "Polsek Jajaran"] as const;
-export const NEWS_CATEGORIES = [
-  ...PRIMARY_NEWS_CATEGORIES,
-  "Kapolresta",
-  "Kamtibmas",
-  "Lalu Lintas",
-  "Binmas",
-  "Humas",
-  "Pengumuman",
-] as const;
+export { NEWS_CATEGORIES, NEWS_CATEGORIES as PRIMARY_NEWS_CATEGORIES } from "./categories";

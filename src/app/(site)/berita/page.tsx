@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { NewsCard, PageHero } from "@/components/site/parts";
+import { canonicalNewsCategory } from "@/lib/categories";
 import { listNews } from "@/lib/db";
 import { NEWS_CATEGORIES } from "@/lib/types";
 
@@ -11,7 +12,8 @@ type Props = { searchParams: Promise<{ q?: string; kategori?: string; page?: str
 const PER_PAGE = 9;
 
 export default async function BeritaPage({ searchParams }: Props) {
-  const { q, kategori, page } = await searchParams;
+  const { q, kategori: requestedCategory, page } = await searchParams;
+  const kategori=requestedCategory ? canonicalNewsCategory(requestedCategory)??requestedCategory : undefined;
   const all = await listNews({ q, category: kategori });
   const pages = Math.max(1, Math.ceil(all.length / PER_PAGE));
   const current = Math.min(Math.max(Math.floor(Number(page)) || 1, 1), pages);

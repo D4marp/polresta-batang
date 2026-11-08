@@ -17,8 +17,8 @@ export const metadata: Metadata = { title: "Berita Kepolisian Batang", descripti
 export default async function HomePage() {
  const [s,news,gallery,videos]=await Promise.all([getSettings(),listNews(),listGallery(),listVideos()]);
 
- const leaderNews=news.filter(n=>n.category==='Kapolresta'||/kapolres/i.test(n.title)).slice(0,3);
- const announcements=news.filter(n=>n.category==='Pengumuman').slice(0,3);
+ const leaderNews=news.filter(n=>/kapolres/i.test(n.title)).slice(0,3);
+ const announcements=news.filter(n=>n.category==='Himbauan Kamtibmas').slice(0,3);
  const photos=gallery.length?gallery.slice(0,4):[{id:'archive-patrol',image:'/images/apel-polisi-batang.jpg',title:'Arsip foto: patroli gabungan personel pengamanan di Batang.'},{id:'archive-training',image:'/images/polisi-penolong-batang.jpg',title:'Arsip foto: pelatihan pemadaman api oleh personel kepolisian Batang.'}];
  return <div className="container-x pb-8">
   <h1 className="sr-only">Berita Kepolisian Batang</h1>

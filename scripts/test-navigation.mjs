@@ -42,6 +42,6 @@ try{
  html=await(await fetch(base)).text();assert.ok(html.includes(marker+'-root'));console.log('PASS edit and restore visibility');
  await submit('delete',{id:a.id});
  assert.equal(await get(marker+'-a'),undefined);assert.equal((await get(marker+'-grandchild')).parent_id,null);console.log('PASS deletion preserves child menu by promoting to root');
- for(const category of ['Kegiatan Polresta Batang','Kriminal','Himbauan','Polsek Jajaran']){const r=await fetch(base+'/berita?kategori='+encodeURIComponent(category));assert.equal(r.status,200);assert.ok((await r.text()).includes(category));}
- const all=await(await fetch(base)).text();assert.ok(all.includes('Berita utama dari seluruh kategori'));for(const category of ['Kegiatan Polresta Batang','Kriminal','Himbauan','Polsek Jajaran'])assert.ok(all.includes(`aria-label="${category}"`));console.log('PASS combined news homepage and four category sections');
+ for(const category of ['Kegiatan Polresta Batang','Kegiatan Polsek Jajaran','Berita Kriminal','Himbauan Kamtibmas']){const r=await fetch(base+'/berita?kategori='+encodeURIComponent(category));assert.equal(r.status,200);assert.ok((await r.text()).includes(category));}
+ const all=await(await fetch(base)).text();assert.ok(all.includes('Berita utama dari seluruh kategori'));for(const category of ['Kegiatan Polresta Batang','Kegiatan Polsek Jajaran','Berita Kriminal','Himbauan Kamtibmas'])assert.ok(all.includes(`aria-label="${category}"`));console.log('PASS combined news homepage and four category sections');
 }finally{await pool.query('DELETE FROM navigation WHERE label LIKE $1',[marker+'%']);await pool.end();console.log('Temporary navigation records cleaned.');}

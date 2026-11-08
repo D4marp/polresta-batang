@@ -1,3 +1,4 @@
+import { canonicalNewsCategory } from "./categories";
 import { validParent, type MenuItem } from "./navigation";
 import "server-only";
 import { randomUUID } from "node:crypto";
@@ -55,8 +56,7 @@ export async function listNews(opts?: {
   const params: Param[] = [];
   if (!opts?.includeDrafts) where.push("status = 'published'");
   if (opts?.category) {
-    const aliases:Record<string,string[]>={"Kegiatan Polresta Batang":["Kegiatan Polresta Batang","Kegiatan"],"Kegiatan":["Kegiatan Polresta Batang","Kegiatan"],"Kriminal":["Kriminal","Reskrim"],"Reskrim":["Kriminal","Reskrim"],"Himbauan":["Himbauan","Imbauan"]};
-    const categories=aliases[opts.category]??[opts.category];
+    const categories=[canonicalNewsCategory(opts.category)??opts.category];
     const markers=categories.map(category=>{params.push(category);return `@v${params.length-1}`});
     where.push(`category IN (${markers.join(",")})`);
   }

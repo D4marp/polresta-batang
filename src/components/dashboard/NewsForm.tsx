@@ -5,6 +5,7 @@ import Link from "next/link";
 import { saveNewsAction } from "@/actions/content";
 import { FormMessage, SubmitButton } from "@/components/ui";
 import { FileField } from "./parts";
+import { canonicalNewsCategory } from "@/lib/categories";
 import { NEWS_CATEGORIES, type News } from "@/lib/types";
 
 export function NewsForm({ news }: { news?: News }) {
@@ -47,7 +48,7 @@ export function NewsForm({ news }: { news?: News }) {
         <div className="card space-y-5 p-6">
           <div>
             <label className="label" htmlFor="category">Kategori</label>
-            <select id="category" name="category" defaultValue={news?.category ?? "Kegiatan Polresta Batang"} className="input">
+            <select id="category" name="category" defaultValue={canonicalNewsCategory(news?.category ?? "") ?? NEWS_CATEGORIES[0]} className="input">
               {NEWS_CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}
