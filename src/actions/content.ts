@@ -1,5 +1,6 @@
 "use server";
 
+import { parseVideoUrl } from "@/lib/video";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
@@ -205,4 +206,21 @@ export async function saveSettingsAction(_: FormState, fd: FormData): Promise<Fo
   }
   refresh();
   return { ok: true };
+}
+
+export async function addVideoAction(_: FormState, fd: FormData): Promise<FormState> {
+ await requireAdmin();
+ const title = str(fd, "title");
+ if (!title || title.length > 300) return {error:"Judul video wajib diisi, maksimal 300 karakter."};
+ const video = parseVideoUrl(str(fd, "url"));
+ if (!video) return {error:"Gunakan URL video HTTPS dari YouTube, Vimeo, Instagram, Facebook, atau TikTok yang valid."};
+ try { await db.addVideo(title, video.url); }
+ catch { return {error:"Video belum dapat disimpan. Silakan coba kembali."}; }
+ refresh();
+ return {ok:true};
+}
+export async function deleteVideoAction(fd: FormData) {
+ await requireAdmin();
+ await db.deleteVideo(str(fd,"id"));
+ refresh();
 }

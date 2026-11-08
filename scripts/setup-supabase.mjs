@@ -5,7 +5,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejec
 const client = await pool.connect();
 try {
   await client.query('BEGIN');
-  await client.query(await readFile(new URL('../supabase/migrations/202611060001_content.sql', import.meta.url), 'utf8'));
+  for (const migration of ['202611060001_content.sql', '202611080001_videos.sql']) await client.query(await readFile(new URL('../supabase/migrations/' + migration, import.meta.url), 'utf8'));
   await client.query('COMMIT');
   console.log('Tabel Supabase siap; RLS aktif dan akses langsung anon/authenticated dibatasi.');
 } catch (e) { await client.query('ROLLBACK'); console.error('Setup gagal:', e.code ?? e.name, e.message, 'posisi', e.position); process.exitCode = 1; }

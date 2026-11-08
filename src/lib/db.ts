@@ -174,3 +174,15 @@ export async function setMessageRead(id: string, read: boolean) {
 export async function deleteMessage(id: string) {
   await query("DELETE FROM messages WHERE id = @v0", [id]);
 }
+
+/* ---------- Video links ---------- */
+export async function listVideos() {
+ const rows = await query<{id: string; title: string; url: string; created_at: Date}>("SELECT * FROM videos ORDER BY created_at DESC");
+ return rows.map(r => ({id:r.id, title:r.title, url:r.url, createdAt:iso(r.created_at)}));
+}
+export async function addVideo(title: string, url: string) {
+ await query("INSERT INTO videos (id,title,url) VALUES (@v0,@v1,@v2)", [randomUUID(),title,url]);
+}
+export async function deleteVideo(id: string) {
+ await query("DELETE FROM videos WHERE id=@v0", [id]);
+}

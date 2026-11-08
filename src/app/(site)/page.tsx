@@ -4,14 +4,15 @@ import { ArrowRight, ArrowUpRight, Camera, Clock3, FileText, Phone } from "lucid
 import { Img } from "@/components/Img";
 import { NewsCard, SectionTitle } from "@/components/site/parts";
 import { NewsVisual } from "@/components/site/NewsVisual";
+import { VideoCard } from "@/components/site/VideoCard";
 import { IdentityBanner } from "@/components/site/IdentityBanner";
-import { getSettings, listGallery, listNews } from "@/lib/db";
+import { getSettings, listGallery, listNews, listVideos } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { NEWS_CATEGORIES } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Berita Kepolisian Batang", description: "Kabar terbaru Polresta Batang: kegiatan Kapolresta, kamtibmas, lalu lintas, dan informasi untuk masyarakat." };
 export default async function HomePage() {
- const [s,news,gallery]=await Promise.all([getSettings(),listNews(),listGallery()]);
+ const [s,news,gallery,videos]=await Promise.all([getSettings(),listNews(),listGallery(),listVideos()]);
  const [lead,...rest]=news;
  const leaderNews=news.filter(n=>n.category==='Kapolresta'||/kapolres/i.test(n.title)).slice(0,3);
  const announcements=news.filter(n=>n.category==='Pengumuman').slice(0,3);
@@ -34,5 +35,6 @@ export default async function HomePage() {
    </aside>
   </div>
   <section className="mt-12 border-t border-slate-200 pt-9"><SectionTitle eyebrow="Cerita dalam gambar" title={gallery.length?'Lensa kegiatan':'Arsip foto kepolisian'} href={gallery.length?'/galeri':undefined} /><div className={`grid gap-5 sm:grid-cols-2 ${gallery.length?'lg:grid-cols-4':''}`}>{photos.map(g=><figure key={g.id} className="group"><div className="relative overflow-hidden"><Img src={g.image} alt={g.title} className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.035]" /><span className="absolute bottom-3 left-3 grid size-8 place-items-center bg-white text-navy-900"><Camera className="size-4" /></span></div><figcaption className="mt-3 text-xs font-semibold leading-5 text-navy-900">{g.title}</figcaption></figure>)}</div></section>
+  <section className="mt-12 border-t border-slate-200 pt-9"><SectionTitle eyebrow="Dokumentasi bergerak" title="Galeri video" href="/galeri#video" />{videos.length ? <div className="grid gap-5 md:grid-cols-3">{videos.slice(0,3).map(v=><VideoCard key={v.id} title={v.title} url={v.url} />)}</div> : <p className="py-5 text-sm text-slate-500">Video kegiatan akan tersedia setelah ditambahkan oleh redaksi.</p>}</section>
  </div>;
 }
