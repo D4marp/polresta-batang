@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import type { Metadata } from "next";
 import { deleteGalleryAction } from "@/actions/content";
@@ -21,7 +22,7 @@ export default async function DashboardGallery() {
             <Img src={g.image} alt={g.title} className="aspect-4/3 w-full object-cover" />
             <div className="flex items-center justify-between gap-2 p-3">
               <p className="truncate text-sm font-medium text-slate-700">{g.title}</p>
-              <DeleteButton action={deleteGalleryAction} id={g.id} label="" />
+              <div className="flex shrink-0 items-center gap-2"><Link href={`/dashboard/galeri/${g.id}`} className="btn-ghost px-2 py-1.5 text-xs" aria-label={`Edit foto: ${g.title}`}>Edit</Link><DeleteButton action={deleteGalleryAction} id={g.id} label="" /></div>
             </div>
           </div>
         ))}

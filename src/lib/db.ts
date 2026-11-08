@@ -186,3 +186,26 @@ export async function addVideo(title: string, url: string) {
 export async function deleteVideo(id: string) {
  await query("DELETE FROM videos WHERE id=@v0", [id]);
 }
+
+/* ---------- Media editing ---------- */
+export async function getGalleryById(id: string) {
+ const [r] = await query<{id:string;title:string;image:string}>("SELECT id,title,image FROM gallery WHERE id=@v0",[id]);
+ return r;
+}
+export async function updateGallery(id:string,title:string,image:string) {
+ return (await query("UPDATE gallery SET title=@v1,image=@v2 WHERE id=@v0 RETURNING id",[id,title,image])).length > 0;
+}
+export async function getDocumentById(id:string) {
+ const [r] = await query<{id:string;title:string;file:string;size:string|number}>("SELECT id,title,file,size FROM documents WHERE id=@v0",[id]);
+ return r;
+}
+export async function updateDocument(id:string,title:string,file:string,size:number) {
+ return (await query("UPDATE documents SET title=@v1,file=@v2,size=@v3 WHERE id=@v0 RETURNING id",[id,title,file,size])).length > 0;
+}
+export async function getVideoById(id:string) {
+ const [r] = await query<{id:string;title:string;url:string}>("SELECT id,title,url FROM videos WHERE id=@v0",[id]);
+ return r;
+}
+export async function updateVideo(id:string,title:string,url:string) {
+ return (await query("UPDATE videos SET title=@v1,url=@v2 WHERE id=@v0 RETURNING id",[id,title,url])).length > 0;
+}

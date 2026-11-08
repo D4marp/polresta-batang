@@ -224,3 +224,50 @@ export async function deleteVideoAction(fd: FormData) {
  await db.deleteVideo(str(fd,"id"));
  refresh();
 }
+
+/* ---------- Edit media ---------- */
+async function editFile(kind: "image" | "document", fd: FormData): Promise<FormState> {
+ await requireAdmin();
+ const id = str(fd,"id");
+ const title = str(fd,"title");
+ if (!title || title.length > 300) return {error:"Judul wajib diisi, maksimal 300 karakter."};
+ let uploaded: string | undefined;
+ let oldFile: string | undefined;
+ try {
+  const item = kind === "image" ? await db.getGalleryById(id) : await db.getDocumentById(id);
+  if (!item) return {error:"Data tidak ditemukan. Kembali ke daftar dan muat ulang halaman."};
+  oldFile = "image" in item ? item.image : item.file;
+  const file = fd.get(kind === "image" ? "image" : "file");
+  if (file instanceof File && file.name) await validateUpload(file,kind);
+  const replacement = await saveUpload(file,kind);
+  uploaded = replacement?.url;
+  const saved = kind === "image"
+   ? await db.updateGallery(id,title,replacement?.url ?? oldFile)
+   : await db.updateDocument(id,title,replacement?.url ?? oldFile,replacement?.size ?? Number("size" in item ? item.size : 0));
+  if (!saved) throw new Error("Data sudah dihapus. Kembali ke daftar dan muat ulang halaman.");
+ } catch (e) {
+  if (uploaded) await removeUpload(uploaded).catch(()=>{});
+  return {error:errMsg(e)};
+ }
+ if (uploaded && oldFile && oldFile !== uploaded) await removeUpload(oldFile).catch(()=>{console.error("File media lama belum dapat dibersihkan.")});
+ refresh();
+ redirect(kind === "image" ? "/dashboard/galeri" : "/dashboard/dokumen");
+}
+export async function editGalleryAction(_:FormState,fd:FormData):Promise<FormState> {
+ return editFile("image",fd);
+}
+export async function editDocumentAction(_:FormState,fd:FormData):Promise<FormState> {
+ return editFile("document",fd);
+}
+export async function editVideoAction(_:FormState,fd:FormData):Promise<FormState> {
+ await requireAdmin();
+ const title=str(fd,"title");
+ if (!title || title.length > 300) return {error:"Judul wajib diisi, maksimal 300 karakter."};
+ const video=parseVideoUrl(str(fd,"url"));
+ if (!video) return {error:"Gunakan URL video HTTPS dari YouTube, Vimeo, Instagram, Facebook, atau TikTok yang valid."};
+ try {
+  if (!await db.updateVideo(str(fd,"id"),title,video.url)) return {error:"Video tidak ditemukan. Kembali ke daftar dan muat ulang halaman."};
+ } catch {return {error:"Perubahan video belum dapat disimpan. Silakan coba kembali."};}
+ refresh();
+ redirect("/dashboard/video");
+}
