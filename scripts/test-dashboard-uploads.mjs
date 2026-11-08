@@ -1,3 +1,4 @@
+import sharp from "sharp";
 ﻿import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -25,7 +26,7 @@ try{
  t=await submit('/dashboard/galeri','image',{title:marker},[['image',png,'valid.png'],['image',Buffer.from('bukan gambar'),'palsu.png']]);assert.match(t,/Isi file tidak sesuai format/);assert.equal((await rows('gallery')).length,0);assert.deepEqual(await files(),initial);pass('batch campuran ditolak tanpa data atau file tersisa');
  t=await submit('/dashboard/galeri','image',{title:marker},[['image',Buffer.alloc(3*1024*1024+1),'besar.png']]);assert.match(t,/total ukuran 3 MB/);pass('batas total ukuran ditolak dengan pesan formulir');
  t=await submit('/dashboard/galeri','image',{title:marker},Array.from({length:11},()=>['image',png,'foto.png']));assert.match(t,/Maksimal 10 foto/);pass('batas jumlah foto ditolak');
- await submit('/dashboard/galeri','image',{title:marker},[['image',png,'satu.png'],['image',png,'dua.PNG']]);const gallery=await rows('gallery');assert.equal(gallery.length,2);for(const g of gallery){const r=await fetch(base+g.image);assert.equal(r.status,200);assert.deepEqual(Buffer.from(await r.arrayBuffer()),png);}pass('dua foto tersimpan di database dan dapat dibuka dengan isi identik');
+ await submit('/dashboard/galeri','image',{title:marker},[['image',png,'satu.png'],['image',png,'dua.PNG']]);const gallery=await rows('gallery');assert.equal(gallery.length,2);for(const g of gallery){const r=await fetch(base+g.image);assert.equal(r.status,200);assert.equal(r.headers.get("content-type"),"image/webp");assert.equal((await sharp(Buffer.from(await r.arrayBuffer())).metadata()).format,"webp");}pass('dua foto tersimpan sebagai WebP dan dapat dibuka');
  assert.ok((await(await fetch(base+'/galeri')).text()).includes(marker));pass('foto tampil pada galeri publik');
  t=await submit('/dashboard/dokumen','file',{title:marker},[['file',Buffer.from('fake'),'palsu.pdf']]);assert.match(t,/Isi file tidak sesuai format/);assert.equal((await rows('documents')).length,0);pass('dokumen dengan ekstensi palsu ditolak');
  await submit('/dashboard/dokumen','file',{title:marker},[['file',pdf,'dokumen.pdf']]);const docs=await rows('documents');assert.equal(docs.length,1);const download=await fetch(base+docs[0].file);assert.equal(download.headers.get('content-type'),'application/pdf');assert.deepEqual(Buffer.from(await download.arrayBuffer()),pdf);assert.ok((await(await fetch(base+'/unduhan')).text()).includes(marker));pass('PDF tersimpan, dapat diunduh, dan tampil di halaman publik');

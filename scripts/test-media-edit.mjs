@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import assert from 'node:assert/strict';
 import { createHmac, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -43,7 +44,7 @@ try{
   const beforeFiles=await files();result=await submit(edit,key,{id,title:marker+' invalid'},[[key,Buffer.from('fake'),name]]);assert.match(result,/Isi file tidak sesuai format/);assert.deepEqual(await row(table,id),saved);assert.deepEqual(await files(),beforeFiles);
   result=await submit(edit,key,{id,title:marker+' oversized'},[[key,Buffer.alloc(3*1024*1024+1),name]]);assert.match(result,/maksimal 3 MB/);assert.deepEqual(await row(table,id),saved);
   console.log('PASS '+route+' invalid replacement preserves data and files');
-  await submit(edit,key,{id,title:marker+' replaced'},[[key,blob,name]]);saved=await row(table,id);assert.notEqual(saved[key],before[key]);assert.deepEqual(Buffer.from(await(await fetch(base+saved[key])).arrayBuffer()),blob);assert.equal((await fetch(base+before[key]+'?verify='+randomUUID())).status,404);await publicTitle(publicPath,saved.title);
+  await submit(edit,key,{id,title:marker+' replaced'},[[key,blob,name]]);saved=await row(table,id);assert.notEqual(saved[key],before[key]);const bytes=Buffer.from(await(await fetch(base+saved[key])).arrayBuffer());if(key==="image")assert.equal((await sharp(bytes).metadata()).format,"webp");else assert.deepEqual(bytes,blob);assert.equal((await fetch(base+before[key]+'?verify='+randomUUID())).status,404);await publicTitle(publicPath,saved.title);
   console.log('PASS '+route+' replacement and old file cleanup');
   result=await submit(edit,key,{id:randomUUID(),title:marker});assert.match(result,/Data tidak ditemukan/);
  }

@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { getStorageAdmin, STORAGE_BUCKET } from "./supabase/admin";
+import { optimizeImage } from "./optimize-image";
 
 const IMAGE_EXT = ["jpg", "jpeg", "png", "webp", "gif"];
 const DOC_EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"];
@@ -47,9 +48,11 @@ export async function saveUpload(
   kind: UploadKind,
 ): Promise<{ url: string; size: number } | null> {
   if (!(file instanceof File) || file.size === 0) return null;
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  let ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   await validateUpload(file, kind);
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const original = Buffer.from(await file.arrayBuffer());
+  const buffer = kind === "image" ? await optimizeImage(original) : original;
+  if (kind === "image") ext = "webp";
 
   const name = `${randomUUID()}.${ext}`;
   const { error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).upload(name, buffer, {
@@ -59,7 +62,7 @@ export async function saveUpload(
     console.error("Storage upload failed", { bucket: STORAGE_BUCKET, status: error.statusCode, message: error.message });
     throw new Error("File belum dapat diunggah ke Supabase Storage. Silakan coba kembali.");
   }
-  return { url: `/uploads/${name}`, size: file.size };
+  return { url: `/uploads/${name}`, size: buffer.length };
 }
 
 export async function removeUpload(url?: string | null) {

@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import sharp from 'sharp';
+import { optimizeImage } from '../src/lib/optimize-image.ts';
+
+const input=await readFile('public/images/kotak.jpeg');
+const output=await optimizeImage(input);
+const meta=await sharp(output).metadata();
+assert.equal(meta.format,'webp');
+assert.ok(output.length<input.length/2);
+assert.ok(meta.width<=1600 && meta.height<=1600);
+assert.ok(!meta.exif);
+assert.ok(Math.abs(meta.width/meta.height-2/3)<0.01);
+console.log(`PASS portrait compressed ${input.length} -> ${output.length} bytes, full composition retained`);
+const oriented=await sharp({create:{width:120,height:80,channels:4,background:'#aabbcc'}}).jpeg().withMetadata({orientation:6}).toBuffer();
+const rotated=await sharp(await optimizeImage(oriented)).metadata();
+assert.equal(rotated.width,80);assert.equal(rotated.height,120);
+console.log('PASS EXIF orientation applied and metadata removed');
+const alpha=await sharp({create:{width:100,height:100,channels:4,background:'#ffffff00'}}).png().toBuffer();
+assert.ok((await sharp(await optimizeImage(alpha)).metadata()).hasAlpha);
+await assert.rejects(()=>optimizeImage(Buffer.from('not an image')),/Foto tidak dapat dibaca/);
+console.log('PASS transparency preserved and invalid image rejected');
