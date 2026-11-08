@@ -102,6 +102,7 @@
 .news-article-body { font-family: Georgia, "Times New Roman", serif; font-size: 19px; line-height: 1.9; color: #334155; }
 .news-article-body > p:first-child::first-letter { float: left; margin: .08em .12em 0 0; font-size: 3.5em; line-height: .8; font-weight: 700; color: #0f1f40; }
 .news-scrollbar { scrollbar-width: none; }
+.identity-banner-dialog::backdrop { background: #020617d9; backdrop-filter: blur(5px); }
 .news-scrollbar::-webkit-scrollbar { display: none; }
 .news-site .card { border-radius: 4px; box-shadow: none; }
 .news-site .btn, .news-site .input { border-radius: 4px; }
