@@ -40,7 +40,7 @@ export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormSt
       title,
       content,
       excerpt,
-      category: str(fd, "category") || "Kegiatan",
+      category: str(fd, "category") || "Kegiatan Polresta Batang",
       status: (str(fd, "status") === "draft" ? "draft" : "published") as NewsStatus,
       author: existing?.author ?? session.username,
       image,

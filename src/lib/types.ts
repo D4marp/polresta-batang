@@ -63,12 +63,12 @@ export interface Settings {
   mapsEmbed: string;
 }
 
+export const PRIMARY_NEWS_CATEGORIES = ["Kegiatan Polresta Batang", "Kriminal", "Himbauan", "Polsek Jajaran"] as const;
 export const NEWS_CATEGORIES = [
+  ...PRIMARY_NEWS_CATEGORIES,
   "Kapolresta",
-  "Kegiatan",
   "Kamtibmas",
   "Lalu Lintas",
-  "Reskrim",
   "Binmas",
   "Humas",
   "Pengumuman",

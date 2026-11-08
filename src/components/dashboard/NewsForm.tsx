@@ -47,7 +47,7 @@ export function NewsForm({ news }: { news?: News }) {
         <div className="card space-y-5 p-6">
           <div>
             <label className="label" htmlFor="category">Kategori</label>
-            <select id="category" name="category" defaultValue={news?.category ?? "Kegiatan"} className="input">
+            <select id="category" name="category" defaultValue={news?.category ?? "Kegiatan Polresta Batang"} className="input">
               {NEWS_CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}

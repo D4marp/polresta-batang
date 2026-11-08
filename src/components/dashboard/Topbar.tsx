@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronRight, ExternalLink, LayoutDashboard } from "lucide-react";
 
-const sections: Record<string, string> = { berita: "Berita", galeri: "Galeri", video: "Galeri video", dokumen: "Dokumen", pesan: "Pesan masuk", pengaturan: "Pengaturan situs" };
+const sections: Record<string, string> = { menu: "Menu website", berita: "Berita", galeri: "Galeri", video: "Galeri video", dokumen: "Dokumen", pesan: "Pesan masuk", pengaturan: "Pengaturan situs" };
 
 export function DashboardTopbar({ username, unread }: { username: string; unread: number }) {
   const segments = usePathname().split("/").filter(Boolean);

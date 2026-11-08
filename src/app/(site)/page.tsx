@@ -1,10 +1,11 @@
 import Image from "next/image";
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Camera, Clock3, FileText, Phone } from "lucide-react";
 import { Img } from "@/components/Img";
 import { NewsCard, SectionTitle } from "@/components/site/parts";
-import { NewsVisual } from "@/components/site/NewsVisual";
+import { NewsHighlights } from "@/components/site/NewsHighlights";
+import { CategorySections } from "@/components/site/CategorySections";
 import { VideoCard } from "@/components/site/VideoCard";
 import { NewsTicker } from "@/components/site/NewsTicker";
 import { IdentityBanner } from "@/components/site/IdentityBanner";
@@ -15,7 +16,7 @@ import { NEWS_CATEGORIES } from "@/lib/types";
 export const metadata: Metadata = { title: "Berita Kepolisian Batang", description: "Kabar terbaru Polresta Batang: kegiatan Kapolresta, kamtibmas, lalu lintas, dan informasi untuk masyarakat." };
 export default async function HomePage() {
  const [s,news,gallery,videos]=await Promise.all([getSettings(),listNews(),listGallery(),listVideos()]);
- const [lead,...rest]=news;
+
  const leaderNews=news.filter(n=>n.category==='Kapolresta'||/kapolres/i.test(n.title)).slice(0,3);
  const announcements=news.filter(n=>n.category==='Pengumuman').slice(0,3);
  const photos=gallery.length?gallery.slice(0,4):[{id:'archive-patrol',image:'/images/apel-polisi-batang.jpg',title:'Arsip foto: patroli gabungan personel pengamanan di Batang.'},{id:'archive-training',image:'/images/polisi-penolong-batang.jpg',title:'Arsip foto: pelatihan pemadaman api oleh personel kepolisian Batang.'}];
@@ -23,10 +24,7 @@ export default async function HomePage() {
   <h1 className="sr-only">Berita Kepolisian Batang</h1>
   <IdentityBanner />
   <NewsTicker items={news.slice(0,8).map(({id,title,slug})=>({id,title,slug}))} />
-  <section aria-label="Berita utama" className="grid gap-7 border-b border-slate-200 pb-8 pt-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)] lg:gap-9">
-   {lead?<article className="group"><Link href={`/berita/${lead.slug}`} className="block"><NewsVisual news={lead} priority className="aspect-[16/9] w-full" /><div className="mt-5 flex items-center gap-3"><span className="news-category">{lead.category}</span><span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Berita utama</span></div><h2 className="news-headline mt-3 text-[clamp(1.65rem,3.5vw,2.7rem)] leading-[1.13] text-navy-950 transition group-hover:text-red-800">{lead.title}</h2><p className="mt-3 line-clamp-2 max-w-2xl text-sm leading-6 text-slate-500">{lead.excerpt}</p><div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-slate-500"><span className="font-semibold text-navy-900">{lead.author}</span><span className="size-0.5 rounded-full bg-slate-300" /><time dateTime={lead.createdAt}>{formatDate(lead.createdAt)}</time></div></Link></article>:<div className="grid min-h-80 place-items-center border border-slate-200 bg-slate-50 p-10 text-center"><div><h2 className="news-headline text-3xl text-navy-900">Kabar Batang, dalam satu portal.</h2><p className="mt-3 text-sm text-slate-500">Berita pertama akan tampil setelah diterbitkan oleh redaksi.</p></div></div>}
-   <div className="lg:border-l lg:border-slate-200 lg:pl-8"><div className="mb-2 flex items-center justify-between border-b-2 border-navy-950 pb-3"><h2 className="text-sm font-extrabold uppercase tracking-wider text-navy-950">Dalam sorotan</h2><span className="text-[10px] text-slate-400">KABAR PILIHAN</span></div>{rest.length?rest.slice(0,4).map((n,i)=><article key={n.id} className="group border-b border-slate-200 py-5"><Link href={`/berita/${n.slug}`} className="flex items-start gap-4"><div className="min-w-0 flex-1"><span className="news-category">{n.category}</span><h3 className="mt-2 text-base font-bold leading-snug tracking-tight text-navy-950 transition group-hover:text-red-800">{n.title}</h3><p className="mt-2 text-[10px] text-slate-400">{formatDate(n.createdAt)}</p></div><NewsVisual news={n} className="mt-1 aspect-square w-24 shrink-0 sm:w-28 lg:w-24" /></Link><span className="sr-only">Sorotan {i+1}</span></article>):<p className="py-8 text-sm text-slate-500">Berita lainnya akan tampil di sini.</p>}<Link href="/berita" className="mt-5 flex items-center gap-2 text-xs font-bold text-navy-900 hover:text-red-700">Jelajahi semua berita <ArrowRight className="size-3.5" /></Link></div>
-  </section>
+  <NewsHighlights news={news} />
   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-slate-200 py-4"><span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Jelajahi rubrik</span>{NEWS_CATEGORIES.map(c=><Link key={c} href={`/berita?kategori=${encodeURIComponent(c)}`} className="text-[11px] font-semibold text-slate-600 transition hover:text-red-700"># {c}</Link>)}</div>
   <div className="grid items-start gap-10 pt-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12">
    <section><SectionTitle eyebrow="Dari ruang redaksi" title="Berita terkini" href="/berita" /><div className="divide-y divide-slate-200">{news.slice(0,8).map(n=><NewsCard key={n.id} n={n} compact />)}{!news.length&&<p className="py-8 text-sm text-slate-500">Belum ada berita terbit.</p>}</div><Link href="/berita" className="mt-7 flex items-center justify-center gap-2 border border-slate-300 px-5 py-3.5 text-xs font-bold text-navy-900 transition hover:border-navy-900 hover:bg-navy-950 hover:text-white">Arsip berita <ArrowRight className="size-3.5" /></Link></section>
@@ -36,6 +34,7 @@ export default async function HomePage() {
     <section className="bg-navy-950 p-5 text-white"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold-300">Informasi masyarakat</p><a href={`tel:${s.hotline}`} className="mt-3 flex items-center justify-between gap-4"><div><p className="text-xs text-navy-100">Layanan darurat polisi</p><p className="mt-1 text-4xl font-extrabold tracking-tight">{s.hotline}</p></div><Phone className="size-7 text-gold-300" /></a><p className="mt-3 flex items-center gap-1.5 text-[10px] text-navy-200"><Clock3 className="size-3" /> Aktif 24 jam · Bebas pulsa</p><div className="mt-5 grid grid-cols-2 gap-2 border-t border-white/15 pt-4"><Link href="/layanan" className="text-[11px] font-semibold text-white hover:text-gold-300">Layanan publik ↗</Link><Link href="/pengaduan" className="text-[11px] font-semibold text-white hover:text-gold-300">Pengaduan ↗</Link></div></section>
    </aside>
   </div>
+  <CategorySections news={news} />
   <section className="mt-12 border-t border-slate-200 pt-9"><SectionTitle eyebrow="Cerita dalam gambar" title={gallery.length?'Lensa kegiatan':'Arsip foto kepolisian'} href={gallery.length?'/galeri':undefined} /><div className={`grid gap-5 sm:grid-cols-2 ${gallery.length?'lg:grid-cols-4':''}`}>{photos.map(g=><figure key={g.id} className="group"><div className="relative overflow-hidden"><Img src={g.image} alt={g.title} className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.035]" /><span className="absolute bottom-3 left-3 grid size-8 place-items-center bg-white text-navy-900"><Camera className="size-4" /></span></div><figcaption className="mt-3 text-xs font-semibold leading-5 text-navy-900">{g.title}</figcaption></figure>)}</div></section>
   <section className="mt-12 border-t border-slate-200 pt-9"><SectionTitle eyebrow="Dokumentasi bergerak" title="Galeri video" href="/galeri#video" />{videos.length ? <div className="grid gap-5 md:grid-cols-3">{videos.slice(0,3).map(v=><VideoCard key={v.id} title={v.title} url={v.url} description={v.description} thumbnail={v.thumbnail} detailHref={`/video/${v.id}`} />)}</div> : <p className="py-5 text-sm text-slate-500">Video kegiatan akan tersedia setelah ditambahkan oleh redaksi.</p>}</section>
  </div>;

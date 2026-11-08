@@ -22,3 +22,12 @@ export async function query<T = Record<string, unknown>>(text: string, params: P
   const statement = text.replace(/@v(\d+)/g, (_, index: string) => `$${Number(index) + 1}`);
   return (await getPool().query(statement, params)).rows as T[];
 }
+
+export async function transaction<T>(run: (execute: typeof query) => Promise<T>): Promise<T> {
+  const client=await getPool().connect();
+  const execute:typeof query=async <R=Record<string,unknown>>(text:string,params:Param[]=[])=>
+    (await client.query(text.replace(/@v(\d+)/g,(_,index:string)=>`$${Number(index)+1}`),params)).rows as R[];
+  try {await client.query("BEGIN");const result=await run(execute);await client.query("COMMIT");return result;}
+  catch(error){await client.query("ROLLBACK");throw error;}
+  finally{client.release();}
+}

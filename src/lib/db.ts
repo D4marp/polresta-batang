@@ -1,6 +1,7 @@
+import { validParent, type MenuItem } from "./navigation";
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { query, type Param } from "./postgres";
+import { query, transaction, type Param } from "./postgres";
 import type { DocumentItem, GalleryItem, Message, News, Settings } from "./types";
 import { seedSettings } from "./seed";
 import { slugify } from "./format";
@@ -54,8 +55,10 @@ export async function listNews(opts?: {
   const params: Param[] = [];
   if (!opts?.includeDrafts) where.push("status = 'published'");
   if (opts?.category) {
-    params.push(opts.category);
-    where.push(`category = @v${params.length - 1}`);
+    const aliases:Record<string,string[]>={"Kegiatan Polresta Batang":["Kegiatan Polresta Batang","Kegiatan"],"Kegiatan":["Kegiatan Polresta Batang","Kegiatan"],"Kriminal":["Kriminal","Reskrim"],"Reskrim":["Kriminal","Reskrim"],"Himbauan":["Himbauan","Imbauan"]};
+    const categories=aliases[opts.category]??[opts.category];
+    const markers=categories.map(category=>{params.push(category);return `@v${params.length-1}`});
+    where.push(`category IN (${markers.join(",")})`);
   }
   if (opts?.q) {
     params.push(`%${opts.q.replace(/[%_[\]]/g, "")}%`);
@@ -208,4 +211,34 @@ export async function getVideoById(id:string) {
 }
 export async function updateVideo(id:string,title:string,url:string,description = "",thumbnail = "") {
  return (await query("UPDATE videos SET title=@v1,url=@v2,description=@v3,thumbnail=@v4 WHERE id=@v0 RETURNING id",[id,title,url,description,thumbnail])).length > 0;
+}
+
+/* ---------- Website navigation ---------- */
+type MenuRow={id:string;label:string;href:string;parent_id:string|null;position:number;enabled:boolean};
+const toMenu=(r:MenuRow):MenuItem=>({id:r.id,label:r.label,href:r.href,parentId:r.parent_id,position:r.position,enabled:r.enabled});
+export async function listMenuItems():Promise<MenuItem[]>{
+ return (await query<MenuRow>("SELECT * FROM navigation ORDER BY position,label")).map(toMenu);
+}
+export async function saveMenuItem(input:MenuItem,isNew:boolean){
+ return transaction(async execute=>{
+  await execute("LOCK TABLE navigation IN SHARE ROW EXCLUSIVE MODE");
+  const items=(await execute<MenuRow>("SELECT * FROM navigation")).map(toMenu);
+  if(!isNew&&!items.some(item=>item.id===input.id))throw new Error("Menu tidak ditemukan. Muat ulang halaman.");
+  if(!validParent(items,input.id,input.parentId))throw new Error("Menu induk tidak valid. Menu tidak boleh menjadi submenu dirinya atau turunannya.");
+  await execute("INSERT INTO navigation(id,label,href,parent_id,position,enabled) VALUES(@v0,@v1,@v2,@v3,@v4,@v5) ON CONFLICT(id) DO UPDATE SET label=EXCLUDED.label,href=EXCLUDED.href,parent_id=EXCLUDED.parent_id,position=EXCLUDED.position,enabled=EXCLUDED.enabled",[input.id,input.label,input.href,input.parentId,input.position,input.enabled]);
+ });
+}
+export async function deleteMenuItem(id:string){await query("DELETE FROM navigation WHERE id=@v0",[id]);}
+
+export async function moveMenuItem(id:string,direction:number){
+ return transaction(async execute=>{
+  await execute("LOCK TABLE navigation IN SHARE ROW EXCLUSIVE MODE");
+  const rows=(await execute<MenuRow>("SELECT * FROM navigation ORDER BY position,label")).map(toMenu);
+  const item=rows.find(row=>row.id===id);if(!item)return;
+  const siblings=rows.filter(row=>row.parentId===item.parentId);
+  const index=siblings.findIndex(row=>row.id===id),target=index+direction;
+  if(target<0||target>=siblings.length)return;
+  [siblings[index],siblings[target]]=[siblings[target],siblings[index]];
+  for(let i=0;i<siblings.length;i++)await execute("UPDATE navigation SET position=@v1 WHERE id=@v0",[siblings[i].id,Math.min(9999,(i+1)*10)]);
+ });
 }
