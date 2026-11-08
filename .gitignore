@@ -30,7 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Never commit environment files, including examples
 .env*
 
 # vercel
@@ -41,5 +41,3 @@ yarn-error.log*
 next-env.d.ts
 /data
 
-# izinkan contoh env
-!.env.example
