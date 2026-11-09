@@ -9,7 +9,6 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   ...(process.env.SITE_URL ? { metadataBase: new URL(process.env.SITE_URL) } : {}),
-  icons: { icon: "/logo.png", apple: "/logo.png" },
   title: {
     default: "Polresta Batang — Portal Berita Kepolisian",
     template: "%s | Polresta Batang",
