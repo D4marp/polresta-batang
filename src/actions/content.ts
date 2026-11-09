@@ -4,7 +4,7 @@ import { parseVideoUrl, validThumbnailUrl } from "@/lib/video";
 import { canonicalNewsCategory } from "@/lib/categories";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireEditor, canManageContent } from "@/lib/auth";
 import * as db from "@/lib/db";
 import { removeUpload, saveUpload, validateUpload } from "@/lib/uploads";
 import type { FormState } from "./auth";
@@ -16,7 +16,7 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : "Terjadi kesala
 
 /* ---------- Berita ---------- */
 export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormState> {
-  const session = await requireAdmin();
+  const session = await requireEditor();
   const id = str(fd, "id") || undefined;
   const title = str(fd, "title");
   const content = str(fd, "content");
@@ -29,6 +29,7 @@ export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormSt
   try {
     const existing = id ? await db.getNewsById(id) : undefined;
     if (id && !existing) return { error: "Berita tidak ditemukan. Muat ulang halaman." };
+    if(existing&&!canManageContent(session,existing.createdBy))return {error:"Anda hanya dapat mengubah berita milik sendiri."};
     let image = existing?.image;
     const up = await saveUpload(fd.get("image"), "image");
     if (up) {
@@ -45,7 +46,8 @@ export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormSt
       excerpt,
       category,
       status: (str(fd, "status") === "draft" ? "draft" : "published") as NewsStatus,
-      author: existing?.author ?? session.username,
+      author: existing?.author ?? session.displayName,
+      createdBy: existing?.createdBy ?? session.id,
       image,
     });
     if (existing?.image && existing.image !== image) await removeUpload(existing.image).catch(() => {});
@@ -58,9 +60,10 @@ export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormSt
 }
 
 export async function deleteNewsAction(fd: FormData) {
-  await requireAdmin();
+  const session=await requireEditor();
   const id = str(fd, "id");
   const item = await db.getNewsById(id);
+  if(!item||!canManageContent(session,item.createdBy))redirect("/dashboard/berita?akses=ditolak");
   await db.deleteNews(id);
   await removeUpload(item?.image);
   refresh();
@@ -68,7 +71,7 @@ export async function deleteNewsAction(fd: FormData) {
 
 /* ---------- Galeri ---------- */
 export async function addGalleryAction(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  const session=await requireEditor();
   const title = str(fd, "title");
   if (!title || title.length > 300) return { error: "Judul foto wajib diisi, maksimal 300 karakter." };
   const uploaded: string[] = [];
@@ -81,7 +84,7 @@ export async function addGalleryAction(_: FormState, fd: FormData): Promise<Form
       const up = await saveUpload(f, "image");
       if (up) uploaded.push(up.url);
     }
-    await db.addGalleryBatch(title, uploaded);
+    await db.addGalleryBatch(title, uploaded, session.id, session.displayName);
   } catch (e) {
     await Promise.all(uploaded.map(url => removeUpload(url).catch(() => {})));
     return { error: errMsg(e) };
@@ -91,9 +94,10 @@ export async function addGalleryAction(_: FormState, fd: FormData): Promise<Form
 }
 
 export async function deleteGalleryAction(fd: FormData) {
-  await requireAdmin();
+  const session=await requireEditor();
   const id = str(fd, "id");
   const item = (await db.listGallery()).find((g) => g.id === id);
+  if(!item||!canManageContent(session,item.createdBy))redirect("/dashboard/galeri?akses=ditolak");
   await db.deleteGallery(id);
   await removeUpload(item?.image);
   refresh();
@@ -212,7 +216,7 @@ export async function saveSettingsAction(_: FormState, fd: FormData): Promise<Fo
 }
 
 export async function addVideoAction(_: FormState, fd: FormData): Promise<FormState> {
- await requireAdmin();
+ const session=await requireEditor();
  const title = str(fd, "title");
  if (!title || title.length > 300) return {error:"Judul video wajib diisi, maksimal 300 karakter."};
  const video = parseVideoUrl(str(fd, "url"));
@@ -222,20 +226,22 @@ export async function addVideoAction(_: FormState, fd: FormData): Promise<FormSt
  const thumbnail=str(fd,"thumbnail");
  if(description.length>5000)return {error:"Narasi maksimal 5000 karakter."};
  if(!validThumbnailUrl(thumbnail))return {error:"URL thumbnail harus berupa alamat gambar HTTPS yang valid."};
- try { await db.addVideo(title, video.url, description, thumbnail); }
+ try { await db.addVideo(title, video.url, description, thumbnail,session.id,session.displayName); }
  catch { return {error:"Video belum dapat disimpan. Silakan coba kembali."}; }
  refresh();
  return {ok:true};
 }
 export async function deleteVideoAction(fd: FormData) {
- await requireAdmin();
- await db.deleteVideo(str(fd,"id"));
+ const session=await requireEditor();
+ const item=await db.getVideoById(str(fd,"id"));
+ if(!item||!canManageContent(session,item.created_by))redirect("/dashboard/video?akses=ditolak");
+ await db.deleteVideo(item.id);
  refresh();
 }
 
 /* ---------- Edit media ---------- */
 async function editFile(kind: "image" | "document", fd: FormData): Promise<FormState> {
- await requireAdmin();
+ const session=kind==="document"?await requireAdmin():await requireEditor();
  const id = str(fd,"id");
  const title = str(fd,"title");
  if (!title || title.length > 300) return {error:"Judul wajib diisi, maksimal 300 karakter."};
@@ -244,6 +250,7 @@ async function editFile(kind: "image" | "document", fd: FormData): Promise<FormS
  try {
   const item = kind === "image" ? await db.getGalleryById(id) : await db.getDocumentById(id);
   if (!item) return {error:"Data tidak ditemukan. Kembali ke daftar dan muat ulang halaman."};
+  if("image" in item&&!canManageContent(session,item.created_by))return {error:"Anda hanya dapat mengubah foto milik sendiri."};
   oldFile = "image" in item ? item.image : item.file;
   const file = fd.get(kind === "image" ? "image" : "file");
   if (file instanceof File && file.name) await validateUpload(file,kind);
@@ -268,7 +275,10 @@ export async function editDocumentAction(_:FormState,fd:FormData):Promise<FormSt
  return editFile("document",fd);
 }
 export async function editVideoAction(_:FormState,fd:FormData):Promise<FormState> {
- await requireAdmin();
+ const session=await requireEditor();
+ const item=await db.getVideoById(str(fd,"id"));
+ if(!item)return {error:"Video tidak ditemukan. Kembali ke daftar dan muat ulang halaman."};
+ if(!canManageContent(session,item.created_by))return {error:"Anda hanya dapat mengubah video milik sendiri."};
  const title=str(fd,"title");
  if (!title || title.length > 300) return {error:"Judul wajib diisi, maksimal 300 karakter."};
  const video=parseVideoUrl(str(fd,"url"));

@@ -25,7 +25,7 @@ export default async function LoginPage() {
       <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12">
         <div className="mb-8"><div className="mb-7 flex items-center gap-3"><span className="flex h-16 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-2.5"><Img src="/logo.png" alt="Lambang Polda Jawa Tengah" priority className="size-full object-contain" /></span><div><p className="text-sm font-extrabold text-navy-900">{settings.name}</p><p className="mt-1 text-[10px] uppercase tracking-widest text-slate-500">Polda Jawa Tengah</p></div></div><h1 className="text-3xl font-extrabold tracking-tight text-navy-900">Selamat datang kembali</h1><p className="mt-3 text-sm leading-relaxed text-slate-500">Masuk untuk menulis, menyunting, dan menerbitkan berita.</p></div>
         <LoginForm />
-        <p className="mt-6 flex items-center justify-center gap-2 text-[11px] text-slate-500"><LockKeyhole className="size-3.5" /> Akses khusus administrator website</p>
+        <p className="mt-6 flex items-center justify-center gap-2 text-[11px] text-slate-500"><LockKeyhole className="size-3.5" /> Akses administrator dan kontributor redaksi</p>
       </div>
       <p className="text-center text-[11px] text-slate-400">{settings.name} · Panel redaksi</p>
     </main>

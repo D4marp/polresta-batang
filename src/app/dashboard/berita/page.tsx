@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireEditor } from "@/lib/auth";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExternalLink, Pencil, Plus } from "lucide-react";
@@ -11,8 +11,8 @@ import { formatDate } from "@/lib/format";
 export const metadata: Metadata = { title: "Berita" };
 
 export default async function DashboardNews() {
-  await requireAdmin();
-  const news = await listNews({ includeDrafts: true });
+  const session=await requireEditor();
+  const news = await listNews({ includeDrafts: true, ownerId:session.role==="admin"?undefined:session.id });
   return (
     <>
       <PageHeader

@@ -28,7 +28,7 @@ export default async function VideoDetail({params}:Props) {
     <article className="mx-auto max-w-5xl">
       <p className="news-category">Dokumentasi video</p>
       <h1 className="news-headline mt-3 text-[clamp(1.8rem,4vw,3.2rem)] leading-tight text-navy-950">{item.title}</h1>
-      <div className="my-6 flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4"><div><p className="text-xs font-bold text-navy-900">Humas Polresta Batang</p><time dateTime={date} className="mt-1 block text-xs text-slate-500">{formatDate(date,true)}</time></div><ShareArticle title={item.title} /></div>
+      <div className="my-6 flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4"><div><p className="text-xs font-bold text-navy-900">{item.uploaded_by_name}</p><time dateTime={date} className="mt-1 block text-xs text-slate-500">{formatDate(date,true)}</time></div><ShareArticle title={item.title} /></div>
       <div className="mx-auto max-w-4xl"><VideoCard title={item.title} url={item.url} thumbnail={item.thumbnail} playerOnly /></div>
       <div className="mx-auto mt-8 max-w-3xl"><h2 className="text-lg font-bold text-navy-900">Tentang video</h2>{item.description ? <div className="mt-4 space-y-5 text-base leading-8 text-slate-700">{item.description.split(/\n\s*\n/).map((paragraph,index)=><p key={index} className="whitespace-pre-line">{paragraph}</p>)}</div> : <p className="mt-4 text-sm leading-7 text-slate-500">Dokumentasi kegiatan Polresta Batang. Narasi tambahan belum tersedia.</p>}
         <p className="mt-6 text-xs leading-6 text-slate-400">Tonton langsung melalui pemutar di atas. Ketersediaan pemutaran mengikuti izin pemilik video.</p>

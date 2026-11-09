@@ -13,11 +13,12 @@ export async function loginAction(_: FormState, fd: FormData): Promise<FormState
   const password = String(fd.get("password") ?? "");
   // jeda kecil untuk memperlambat brute force
   await new Promise((r) => setTimeout(r, 600));
-  if (!checkCredentials(username, password)) {
+  const account=await checkCredentials(username,password);
+  if (!account) {
     return { error: "Username atau password salah." };
   }
-  await createSession(username);
-  redirect("/dashboard");
+  await createSession(account);
+  redirect(account.mustChangePassword ? "/dashboard/akun" : "/dashboard");
 }
 
 export async function logoutAction() {

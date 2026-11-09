@@ -1,14 +1,14 @@
+import {createTestAccount} from "./test-account.mjs";
 import assert from 'node:assert/strict';
-import { createHmac,randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { Pool } from 'pg';
 import { menuTree,validParent,validMenuHref } from '../src/lib/navigation.ts';
 const base=process.env.TEST_BASE_URL||'http://localhost:3006';
 const marker='MENU-TEST-'+randomUUID();
-const p=Buffer.from(JSON.stringify({u:process.env.ADMIN_USERNAME,exp:Date.now()+3600000})).toString('base64url');
-const cookie=`pb_session=${p}.${createHmac('sha256',process.env.AUTH_SECRET).update(p).digest('base64url')}`;
 const url=new URL(process.env.DATABASE_URL);for(const key of ['sslmode','sslrootcert','sslcert','sslkey'])url.searchParams.delete(key);
 const pool=new Pool({connectionString:url.toString(),ssl:{rejectUnauthorized:true,ca:await readFile('certificates/supabase-ca.crt','utf8')},max:1});
+const actor=await createTestAccount(pool);const cookie=actor.cookie;
 const decode=s=>s.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&amp;/g,'&');
 async function submit(field,values,auth=true){
  const html=await(await fetch(base+'/dashboard/menu',{headers:{cookie}})).text();
@@ -44,4 +44,4 @@ try{
  assert.equal(await get(marker+'-a'),undefined);assert.equal((await get(marker+'-grandchild')).parent_id,null);console.log('PASS deletion preserves child menu by promoting to root');
  for(const category of ['Kegiatan Polresta Batang','Kegiatan Polsek Jajaran','Berita Kriminal','Himbauan Kamtibmas']){const r=await fetch(base+'/berita?kategori='+encodeURIComponent(category));assert.equal(r.status,200);assert.ok((await r.text()).includes(category));}
  const all=await(await fetch(base)).text();assert.ok(all.includes('Berita utama dari seluruh kategori'));for(const category of ['Kegiatan Polresta Batang','Kegiatan Polsek Jajaran','Berita Kriminal','Himbauan Kamtibmas'])assert.ok(all.includes(`aria-label="${category}"`));console.log('PASS combined news homepage and four category sections');
-}finally{await pool.query('DELETE FROM navigation WHERE label LIKE $1',[marker+'%']);await pool.end();console.log('Temporary navigation records cleaned.');}
+}finally{await pool.query('DELETE FROM navigation WHERE label LIKE $1',[marker+'%']);await actor.cleanup();await pool.end();console.log('Temporary navigation records cleaned.');}

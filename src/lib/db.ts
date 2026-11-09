@@ -32,6 +32,7 @@ type NewsRow = Omit<News, "image" | "createdAt" | "updatedAt"> & {
   image: string | null;
   created_at: Date;
   updated_at: Date;
+  created_by: string | null;
 };
 const toNews = (r: NewsRow): News => ({
   id: r.id,
@@ -43,43 +44,46 @@ const toNews = (r: NewsRow): News => ({
   image: r.image ?? undefined,
   status: r.status,
   author: r.author,
+  createdBy: r.created_by,
   createdAt: iso(r.created_at),
   updatedAt: iso(r.updated_at),
 });
 
 export async function listNews(opts?: {
   includeDrafts?: boolean;
+  ownerId?: string;
   category?: string;
   q?: string;
 }): Promise<News[]> {
   const where: string[] = [];
   const params: Param[] = [];
-  if (!opts?.includeDrafts) where.push("status = 'published'");
+  if (!opts?.includeDrafts) where.push("n.status = 'published'");
   if (opts?.category) {
     const categories=[canonicalNewsCategory(opts.category)??opts.category];
     const markers=categories.map(category=>{params.push(category);return `@v${params.length-1}`});
-    where.push(`category IN (${markers.join(",")})`);
+    where.push(`n.category IN (${markers.join(",")})`);
   }
   if (opts?.q) {
     params.push(`%${opts.q.replace(/[%_[\]]/g, "")}%`);
     const i = params.length - 1;
-    where.push(`(title ILIKE @v${i} OR excerpt ILIKE @v${i})`);
+    where.push(`(n.title ILIKE @v${i} OR n.excerpt ILIKE @v${i})`);
   }
+  if(opts?.ownerId){params.push(opts.ownerId);where.push(`n.created_by=@v${params.length-1}`);}
   const rows = await query<NewsRow>(
-    `SELECT * FROM news ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY created_at DESC`,
+    `SELECT n.*,COALESCE(u.display_name,n.author) AS author FROM news n LEFT JOIN app_users u ON u.id=n.created_by ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY n.created_at DESC`,
     params,
   );
   return rows.map(toNews);
 }
 export async function getNewsBySlug(slug: string) {
   const [r] = await query<NewsRow>(
-    "SELECT * FROM news WHERE slug = @v0 AND status = 'published'",
+    "SELECT n.*,COALESCE(u.display_name,n.author) AS author FROM news n LEFT JOIN app_users u ON u.id=n.created_by WHERE n.slug = @v0 AND n.status = 'published'",
     [slug],
   );
   return r ? toNews(r) : undefined;
 }
 export async function getNewsById(id: string) {
-  const [r] = await query<NewsRow>("SELECT * FROM news WHERE id = @v0", [id]);
+  const [r] = await query<NewsRow>("SELECT n.*,COALESCE(u.display_name,n.author) AS author FROM news n LEFT JOIN app_users u ON u.id=n.created_by WHERE n.id = @v0", [id]);
   return r ? toNews(r) : undefined;
 }
 export async function saveNews(
@@ -101,10 +105,10 @@ export async function saveNews(
     slug = `${base}-${randomUUID().slice(0, 4)}`;
   }
   await query(
-    `INSERT INTO news (id, slug, title, excerpt, content, category, image, status, author, created_at, updated_at)
-     VALUES (@v0,@v1,@v2,@v3,@v4,@v5,@v6,@v7,@v8,@v9,@v9)`,
+    `INSERT INTO news (id, slug, title, excerpt, content, category, image, status, author, created_at, updated_at, created_by)
+     VALUES (@v0,@v1,@v2,@v3,@v4,@v5,@v6,@v7,@v8,@v9,@v9,@v10)`,
     [randomUUID(), slug, input.title, input.excerpt, input.content, input.category,
-     input.image ?? null, input.status, input.author, now],
+     input.image ?? null, input.status, input.author, now, input.createdBy??null],
   );
 }
 export async function deleteNews(id: string) {
@@ -112,25 +116,17 @@ export async function deleteNews(id: string) {
 }
 
 /* ---------- Gallery ---------- */
-export async function listGallery(): Promise<GalleryItem[]> {
-  const rows = await query<{ id: string; title: string; image: string; created_at: Date }>(
-    "SELECT * FROM gallery ORDER BY created_at DESC",
-  );
-  return rows.map((r) => ({ id: r.id, title: r.title, image: r.image, createdAt: iso(r.created_at) }));
+export async function listGallery(opts?:{ownerId?:string}):Promise<GalleryItem[]>{
+ const rows=await query<{id:string;title:string;image:string;created_at:Date;created_by:string|null;author:string}>("SELECT g.*,COALESCE(u.display_name,g.uploaded_by_name) AS author FROM gallery g LEFT JOIN app_users u ON u.id=g.created_by "+(opts?.ownerId?"WHERE g.created_by=@v0 ":"")+"ORDER BY g.created_at DESC",opts?.ownerId?[opts.ownerId]:[]);
+ return rows.map(r=>({id:r.id,title:r.title,image:r.image,createdAt:iso(r.created_at),createdBy:r.created_by,author:r.author}));
 }
-export async function addGallery(title: string, image: string) {
-  await query("INSERT INTO gallery (id, title, image, created_at) VALUES (@v0,@v1,@v2,@v3)", [
-    randomUUID(), title, image, new Date(),
-  ]);
+export async function addGallery(title:string,image:string,createdBy?:string,author="Arsip redaksi"){
+ await query("INSERT INTO gallery(id,title,image,created_at,created_by,uploaded_by_name) VALUES(@v0,@v1,@v2,@v3,@v4,@v5)",[randomUUID(),title,image,new Date(),createdBy??null,author]);
 }
-export async function addGalleryBatch(title: string, images: string[]) {
-  const params: Param[] = [title, new Date()];
-  const values = images.map(image => {
-    const i = params.length;
-    params.push(randomUUID(), image);
-    return `(@v${i}, @v0, @v${i + 1}, @v1)`;
-  });
-  if (values.length) await query(`INSERT INTO gallery (id, title, image, created_at) VALUES ${values.join(",")}`, params);
+export async function addGalleryBatch(title:string,images:string[],createdBy?:string,author="Arsip redaksi"){
+ const params:Param[]=[title,new Date(),createdBy??null,author];
+ const values=images.map(image=>{const index=params.length;params.push(randomUUID(),image);return `(@v${index},@v0,@v${index+1},@v1,@v2,@v3)`;});
+ if(values.length)await query(`INSERT INTO gallery(id,title,image,created_at,created_by,uploaded_by_name) VALUES ${values.join(",")}`,params);
 }
 export async function deleteGallery(id: string) {
   await query("DELETE FROM gallery WHERE id = @v0", [id]);
@@ -179,12 +175,12 @@ export async function deleteMessage(id: string) {
 }
 
 /* ---------- Video links ---------- */
-export async function listVideos() {
- const rows = await query<{id: string; title: string; url: string; description:string; thumbnail:string; created_at: Date}>("SELECT * FROM videos ORDER BY created_at DESC");
- return rows.map(r => ({id:r.id, title:r.title, url:r.url, description:r.description, thumbnail:r.thumbnail, createdAt:iso(r.created_at)}));
+export async function listVideos(opts?:{ownerId?:string}){
+ const rows=await query<{id:string;title:string;url:string;description:string;thumbnail:string;created_at:Date;created_by:string|null;author:string}>("SELECT v.*,COALESCE(u.display_name,v.uploaded_by_name) AS author FROM videos v LEFT JOIN app_users u ON u.id=v.created_by "+(opts?.ownerId?"WHERE v.created_by=@v0 ":"")+"ORDER BY v.created_at DESC",opts?.ownerId?[opts.ownerId]:[]);
+ return rows.map(r=>({id:r.id,title:r.title,url:r.url,description:r.description,thumbnail:r.thumbnail,createdAt:iso(r.created_at),createdBy:r.created_by,author:r.author}));
 }
-export async function addVideo(title: string, url: string, description = "", thumbnail = "") {
- await query("INSERT INTO videos (id,title,url,description,thumbnail) VALUES (@v0,@v1,@v2,@v3,@v4)", [randomUUID(),title,url,description,thumbnail]);
+export async function addVideo(title:string,url:string,description="",thumbnail="",createdBy?:string,author="Arsip redaksi"){
+ await query("INSERT INTO videos(id,title,url,description,thumbnail,created_by,uploaded_by_name) VALUES(@v0,@v1,@v2,@v3,@v4,@v5,@v6)",[randomUUID(),title,url,description,thumbnail,createdBy??null,author]);
 }
 export async function deleteVideo(id: string) {
  await query("DELETE FROM videos WHERE id=@v0", [id]);
@@ -192,7 +188,7 @@ export async function deleteVideo(id: string) {
 
 /* ---------- Media editing ---------- */
 export async function getGalleryById(id: string) {
- const [r] = await query<{id:string;title:string;image:string}>("SELECT id,title,image FROM gallery WHERE id=@v0",[id]);
+ const [r] = await query<{id:string;title:string;image:string;created_by:string|null}>("SELECT id,title,image,created_by FROM gallery WHERE id=@v0",[id]);
  return r;
 }
 export async function updateGallery(id:string,title:string,image:string) {
@@ -206,7 +202,7 @@ export async function updateDocument(id:string,title:string,file:string,size:num
  return (await query("UPDATE documents SET title=@v1,file=@v2,size=@v3 WHERE id=@v0 RETURNING id",[id,title,file,size])).length > 0;
 }
 export async function getVideoById(id:string) {
- const [r] = await query<{id:string;title:string;url:string;description:string;thumbnail:string;created_at:Date}>("SELECT id,title,url,description,thumbnail,created_at FROM videos WHERE id=@v0",[id]);
+ const [r] = await query<{id:string;title:string;url:string;description:string;thumbnail:string;created_at:Date;created_by:string|null;uploaded_by_name:string}>("SELECT id,title,url,description,thumbnail,created_at,created_by,uploaded_by_name FROM videos WHERE id=@v0",[id]);
  return r;
 }
 export async function updateVideo(id:string,title:string,url:string,description = "",thumbnail = "") {

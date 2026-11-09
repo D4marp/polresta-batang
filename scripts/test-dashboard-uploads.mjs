@@ -1,15 +1,15 @@
+import {createTestAccount} from "./test-account.mjs";
 import sharp from "sharp";
 ﻿import assert from 'node:assert/strict';
-import { createHmac, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import {storageClient,bucket} from './storage-client.mjs';
 import { Pool } from 'pg';
 const base=process.env.TEST_BASE_URL || 'http://localhost:3000';
 const marker=`UPLOAD-TEST-${randomUUID()}`;
-const p=Buffer.from(JSON.stringify({u:process.env.ADMIN_USERNAME,exp:Date.now()+3600000})).toString('base64url');
-const cookie=`pb_session=${p}.${createHmac('sha256',process.env.AUTH_SECRET).update(p).digest('base64url')}`;
 const url=process.env.DATABASE_URL;
 const pool=new Pool({connectionString:url,ssl:{rejectUnauthorized:true,ca:await readFile('certificates/supabase-ca.crt','utf8')},max:1});
+const actor=await createTestAccount(pool);const cookie=actor.cookie;
 const storage=storageClient();
 const png=await readFile('public/logo.png');
 const pdf=Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF');
@@ -45,5 +45,5 @@ try{
  console.log(`${passed} pemeriksaan unggahan lulus.`);
 }finally{
  for(const table of ['gallery','documents','news']){const items=await rows(table);for(const item of items){const file=item.image??item.file;if(file?.startsWith('/uploads/')){const {error}=await storage.storage.from(bucket).remove([file.slice(9)]);assert.ok(!error,'file uji cloud dibersihkan');}}await pool.query(`DELETE FROM ${table} WHERE title=$1`,[marker]);}
- await pool.query('DELETE FROM messages WHERE subject=$1',[marker]);await pool.end();console.log('Data dan file uji dibersihkan.');
+ await pool.query('DELETE FROM messages WHERE subject=$1',[marker]);await actor.cleanup();await pool.end();console.log('Data dan file uji dibersihkan.');
 }

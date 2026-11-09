@@ -1,16 +1,16 @@
+import {createTestAccount} from "./test-account.mjs";
 import sharp from "sharp";
 import assert from 'node:assert/strict';
-import { createHmac, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { Pool } from 'pg';
 import { storageClient, bucket } from './storage-client.mjs';
 const base=process.env.TEST_BASE_URL || 'http://localhost:3002';
 const marker=`MEDIA-EDIT-${randomUUID()}`;
-const p=Buffer.from(JSON.stringify({u:process.env.ADMIN_USERNAME,exp:Date.now()+3600000})).toString('base64url');
-const cookie=`pb_session=${p}.${createHmac('sha256',process.env.AUTH_SECRET).update(p).digest('base64url')}`;
 const url=new URL(process.env.DATABASE_URL);
 for(const key of ['sslmode','sslrootcert','sslcert','sslkey'])url.searchParams.delete(key);
 const pool=new Pool({connectionString:url.toString(),ssl:{rejectUnauthorized:true,ca:await readFile('certificates/supabase-ca.crt','utf8')},max:1});
+const actor=await createTestAccount(pool);const cookie=actor.cookie;
 const storage=storageClient();
 const png=await readFile('public/logo.png');
 const pdf=Buffer.from('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF');
@@ -62,5 +62,5 @@ try{
  console.log('All media CRUD checks passed.');
 }finally{
  for(const [table,id]of Object.entries(ids)){const item=await row(table,id);if(item){const file=item.image??item.file;if(file?.startsWith('/uploads/'))await storage.storage.from(bucket).remove([file.slice(9)]);await pool.query(`DELETE FROM ${table} WHERE id=$1`,[id]);}}
- await pool.end();console.log('Temporary media records and files cleaned.');
+ await actor.cleanup();await pool.end();console.log('Temporary media records and files cleaned.');
 }

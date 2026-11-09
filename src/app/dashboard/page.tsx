@@ -1,4 +1,5 @@
-import { requireAdmin } from "@/lib/auth";
+import { ContributorHome } from "@/components/dashboard/ContributorHome";
+import { requireEditor } from "@/lib/auth";
 import Link from "next/link";
 import { FileText, Images, Mail, Newspaper, Plus, ArrowUpRight, CheckCircle2, Circle } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/parts";
@@ -6,7 +7,8 @@ import { getSettings, listDocuments, listGallery, listMessages, listNews } from 
 import { formatDate } from "@/lib/format";
 
 export default async function DashboardHome() {
-  await requireAdmin();
+  const user=await requireEditor();
+  if(user.role!=="admin")return <ContributorHome user={user} />;
   const [news, gallery, docs, messages, settings] = await Promise.all([
     listNews({ includeDrafts: true }),
     listGallery(),

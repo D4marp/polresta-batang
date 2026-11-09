@@ -1,14 +1,14 @@
+import {createTestAccount} from "./test-account.mjs";
 ﻿import assert from 'node:assert/strict';
-import { createHmac, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
 import { Pool } from 'pg';
 const base=process.env.TEST_BASE_URL || 'http://localhost:3000';
 const marker=`UPLOAD-TEST-${randomUUID()}`;
-const p=Buffer.from(JSON.stringify({u:process.env.ADMIN_USERNAME,exp:Date.now()+3600000})).toString('base64url');
-const cookie=`pb_session=${p}.${createHmac('sha256',process.env.AUTH_SECRET).update(p).digest('base64url')}`;
 const parsed=new URL(process.env.DATABASE_URL);for(const key of ['sslmode','sslrootcert','sslcert','sslkey'])parsed.searchParams.delete(key);const url=parsed.toString();
 const pool=new Pool({connectionString:url,ssl:{rejectUnauthorized:true,ca:await readFile('certificates/supabase-ca.crt','utf8')},max:1});
+const actor=await createTestAccount(pool);const cookie=actor.cookie;
 
 
 const decode=s=>s.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
@@ -39,4 +39,4 @@ try {
  await submit('/dashboard/video','url',{title:marker,url:'https://www.instagram.com/p/TESTVIDEO/'});assert.equal((await rows('videos')).length,2);console.log('PASS Instagram link saved');
  for(const item of await rows('videos'))await submit('/dashboard/video','id',{id:item.id});
  assert.equal((await rows('videos')).length,0);assert.ok(!(await(await fetch(base+'/galeri')).text()).includes(marker));console.log('PASS admin deletion removes public entries');
-} finally {await pool.query('DELETE FROM videos WHERE title=$1',[marker]);await pool.end();console.log('Temporary video records cleaned.');}
+} finally {await pool.query('DELETE FROM videos WHERE title=$1',[marker]);await actor.cleanup();await pool.end();console.log('Temporary video records cleaned.');}

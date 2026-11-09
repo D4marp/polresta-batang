@@ -10,11 +10,14 @@ export interface News {
   image?: string;
   status: NewsStatus;
   author: string;
+  createdBy?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface GalleryItem {
+  createdBy?: string | null;
+  author?: string;
   id: string;
   title: string;
   image: string;

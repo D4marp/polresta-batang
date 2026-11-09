@@ -2,9 +2,9 @@
 import { Pool } from 'pg';
 import {storageClient,bucket} from './storage-client.mjs';
 const issues = [];
-for (const key of ['DATABASE_URL','NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','AUTH_SECRET','ADMIN_USERNAME','ADMIN_PASSWORD','SITE_URL']) if (!process.env[key]) issues.push(`${key} belum diatur`);
+for (const key of ['DATABASE_URL','NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','AUTH_SECRET','SITE_URL']) if (!process.env[key]) issues.push(`${key} belum diatur`);
 if ((process.env.AUTH_SECRET?.length??0)<32) issues.push('AUTH_SECRET minimal 32 karakter untuk produksi');
-if ((process.env.ADMIN_PASSWORD?.length??0)<12) issues.push('ADMIN_PASSWORD minimal 12 karakter untuk produksi');
+
 try {if(new URL(process.env.SITE_URL).protocol!=='https:')throw new Error();}catch{issues.push('SITE_URL harus berupa domain HTTPS produksi');}
 if(!process.env.SUPABASE_STORAGE_SECRET_KEY&&!process.env.SUPABASE_SECRET_KEY&&!process.env.SUPABASE_SERVICE_ROLE_KEY)issues.push('Kunci server Supabase Storage belum diatur');
 try{const {data,error}=await storageClient().storage.getBucket(bucket);if(error||!data||data.public||Number(data.file_size_limit)!==10*1024*1024)issues.push('Bucket Storage privat dengan batas 10 MB belum siap');}catch{issues.push('Koneksi Supabase Storage belum siap');}
@@ -12,6 +12,7 @@ let pool;
 try{
  if(!process.env.DATABASE_URL?.startsWith('postgres'))throw new Error();
  pool=new Pool({connectionString:process.env.DATABASE_URL,max:1,connectionTimeoutMillis:10000,ssl:{rejectUnauthorized:true,ca:await readFile(new URL('../certificates/supabase-ca.crt',import.meta.url),'utf8')}});
+ const {rows:admins}=await pool.query("SELECT id,must_change_password FROM app_users WHERE role='admin' AND active=true");if(!admins.length)issues.push("Belum ada administrator aktif");if(admins.some(a=>a.must_change_password))issues.push("Administrator belum mengganti password awal");
  const {rows}=await pool.query("SELECT value FROM settings WHERE key='main'");const s=rows[0]?.value??{};
  if(!s.phone||s.phone.includes('000000')||!s.email||!s.address)issues.push('Kontak resmi satuan belum lengkap');
  if(!s.heroImage||!s.leaderPhoto||!s.leaderName||s.leaderName==='Kapolresta Batang')issues.push('Foto beranda dan identitas pimpinan belum lengkap');
