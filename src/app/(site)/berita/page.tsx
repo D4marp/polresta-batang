@@ -3,21 +3,18 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { NewsCard, PageHero } from "@/components/site/parts";
 import { canonicalNewsCategory } from "@/lib/categories";
-import { listNews } from "@/lib/db";
+import { getPublicNewsPage } from "@/lib/public-data";
 import { NEWS_CATEGORIES } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Berita" };
 
 type Props = { searchParams: Promise<{ q?: string; kategori?: string; page?: string }> };
-const PER_PAGE = 9;
+
 
 export default async function BeritaPage({ searchParams }: Props) {
   const { q, kategori: requestedCategory, page } = await searchParams;
   const kategori=requestedCategory ? canonicalNewsCategory(requestedCategory)??requestedCategory : undefined;
-  const all = await listNews({ q, category: kategori });
-  const pages = Math.max(1, Math.ceil(all.length / PER_PAGE));
-  const current = Math.min(Math.max(Math.floor(Number(page)) || 1, 1), pages);
-  const items = all.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const {items,total,pages,current}=await getPublicNewsPage(q,kategori,Number(page));
 
   const href = (o: { kategori?: string; page?: number }) => {
     const p = new URLSearchParams();
@@ -56,6 +53,7 @@ export default async function BeritaPage({ searchParams }: Props) {
               name="q"
               aria-label="Cari berita"
               type="search"
+              maxLength={160}
               defaultValue={q}
               placeholder="Cari berita..."
               className="input pl-9"
@@ -64,7 +62,7 @@ export default async function BeritaPage({ searchParams }: Props) {
           </form>
         </div>
 
-        <p className="mb-6 border-b border-slate-200 pb-4 text-[11px] text-slate-400">{all.length} berita ditemukan{q ? ` untuk “${q}”` : ""}</p>
+        <p className="mb-6 border-b border-slate-200 pb-4 text-[11px] text-slate-400">{total} berita ditemukan{q ? ` untuk “${q}”` : ""}</p>
 
         {items.length ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

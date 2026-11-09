@@ -2,6 +2,9 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { getStorageAdmin, STORAGE_BUCKET } from "./supabase/admin";
 import { optimizeImage } from "./optimize-image";
+import {revalidateTag} from "next/cache";
+import {mediaCacheTag} from "./cache-policy";
+import {reserveUpload,releaseUpload} from "./usage";
 
 const IMAGE_EXT = ["jpg", "jpeg", "png", "webp", "gif"];
 const DOC_EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"];
@@ -55,14 +58,17 @@ export async function saveUpload(
   if (kind === "image") ext = "webp";
 
   const name = `${randomUUID()}.${ext}`;
+  const reservation=await reserveUpload(buffer.length);
+  try {
   const { error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).upload(name, buffer, {
-    contentType: MIME[ext], cacheControl: "3600", upsert: false,
+    contentType: MIME[ext], cacheControl: "604800", upsert: false,
   });
   if (error) {
     console.error("Storage upload failed", { bucket: STORAGE_BUCKET, status: error.statusCode, message: error.message });
     throw new Error("File belum dapat diunggah ke Supabase Storage. Silakan coba kembali.");
   }
   return { url: `/uploads/${name}`, size: buffer.length };
+  } finally {await releaseUpload(reservation).catch(()=>console.error("Reservasi unggahan akan kedaluwarsa otomatis."));}
 }
 
 export async function removeUpload(url?: string | null) {
@@ -71,4 +77,5 @@ export async function removeUpload(url?: string | null) {
   if (!/^[\w-]+\.[a-z0-9]+$/i.test(name)) return;
   const { error } = await getStorageAdmin().storage.from(STORAGE_BUCKET).remove([name]);
   if (error) throw new Error("File belum dapat dihapus dari Supabase Storage.");
+  revalidateTag(mediaCacheTag(name),{expire:0});
 }

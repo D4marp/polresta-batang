@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Eye, Target } from "lucide-react";
 import { PageHero } from "@/components/site/parts";
-import { getSettings } from "@/lib/db";
+import { getPublicSettings } from "@/lib/public-data";
 import { Img } from "@/components/Img";
 import Link from "next/link";
 
 export const metadata: Metadata = { title: "Profil" };
 
 export default async function ProfilPage() {
-  const s = await getSettings();
+  const s = await getPublicSettings();
   return (
     <>
       <PageHero title="Profil" subtitle={`Mengenal lebih dekat ${s.name}.`} />

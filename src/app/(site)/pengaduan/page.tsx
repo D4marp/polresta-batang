@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { ContactForm } from "@/components/site/ContactForm";
 import { PageHero } from "@/components/site/parts";
-import { getSettings } from "@/lib/db";
+import { getPublicSettings } from "@/lib/public-data";
 
 export const metadata: Metadata = { title: "Kontak & Pengaduan" };
 
 export default async function PengaduanPage() {
-  const s = await getSettings();
+  const s = await getPublicSettings();
   const info = [
     { icon: MapPin, label: "Alamat", value: s.address },
     { icon: Phone, label: "Telepon", value: s.phone },

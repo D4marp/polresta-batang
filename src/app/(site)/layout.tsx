@@ -1,13 +1,13 @@
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
-import { getSettings, listMenuItems } from "@/lib/db";
+import { getPublicSettings, getPublicMenuItems } from "@/lib/public-data";
 import { visibleMenuItems } from "@/lib/navigation";
 
-// Data dibaca dari Supabase PostgreSQL pada setiap request.
-export const dynamic = "force-dynamic";
+// Public data is cached; authentication and dashboard data remain uncached.
+export const revalidate = 300;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const [s,menuItems] = await Promise.all([getSettings(),listMenuItems()]);
+  const [s,menuItems] = await Promise.all([getPublicSettings(),getPublicMenuItems()]);
   return (
     <div className="news-site min-h-screen bg-white">
       <a href="#main-content" className="skip-link">Langsung ke konten</a>

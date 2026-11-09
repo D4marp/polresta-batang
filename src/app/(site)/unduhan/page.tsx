@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Download, FileText } from "lucide-react";
 import { PageHero } from "@/components/site/parts";
-import { listDocuments } from "@/lib/db";
+import { getPublicDocuments } from "@/lib/public-data";
 import { formatBytes, formatDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Unduhan" };
 
 export default async function UnduhanPage() {
-  const docs = await listDocuments();
+  const docs = await getPublicDocuments();
   return (
     <>
       <PageHero title="Unduhan" subtitle="Formulir, peraturan, dan dokumen informasi publik." />

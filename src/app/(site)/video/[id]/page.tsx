@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getVideoById, listVideos } from "@/lib/db";
+import { getPublicVideoById, getPublicVideos } from "@/lib/public-data";
 import { formatDate } from "@/lib/format";
 import { parseVideoUrl } from "@/lib/video";
 import { VideoCard } from "@/components/site/VideoCard";
@@ -11,7 +11,7 @@ import { SectionTitle } from "@/components/site/parts";
 
 type Props = {params:Promise<{id:string}>};
 export async function generateMetadata({params}:Props):Promise<Metadata> {
-  const item=await getVideoById((await params).id);
+  const item=await getPublicVideoById((await params).id);
   if(!item)return {title:"Video tidak ditemukan"};
   const description=item.description.slice(0,160)||`Tonton ${item.title} dalam galeri video Polresta Batang.`;
   const image=item.thumbnail||parseVideoUrl(item.url)?.thumbnail;
@@ -19,9 +19,9 @@ export async function generateMetadata({params}:Props):Promise<Metadata> {
 }
 
 export default async function VideoDetail({params}:Props) {
-  const item=await getVideoById((await params).id);
+  const item=await getPublicVideoById((await params).id);
   if(!item)notFound();
-  const related=(await listVideos()).filter(v=>v.id!==item.id).slice(0,3);
+  const related=(await getPublicVideos(4)).filter(v=>v.id!==item.id).slice(0,3);
   const date=new Date(item.created_at).toISOString();
   return <div className="container-x py-7 sm:py-10">
     <nav aria-label="Breadcrumb video" className="mb-7 flex flex-wrap items-center gap-2 text-xs text-slate-500"><Link href="/" className="hover:text-red-700">Beranda</Link><span>/</span><Link href="/galeri#video" className="hover:text-red-700">Galeri video</Link><span>/</span><span className="text-red-700">Detail video</span></nav>

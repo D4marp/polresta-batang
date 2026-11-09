@@ -1,16 +1,18 @@
 "use server";
+import { invalidatePublicContent } from "@/lib/invalidate-public";
 
 import { parseVideoUrl, validThumbnailUrl } from "@/lib/video";
 import { canonicalNewsCategory } from "@/lib/categories";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { assertDatabaseCapacity, allowContactMessage } from "@/lib/usage";
 import { requireAdmin, requireEditor, canManageContent } from "@/lib/auth";
 import * as db from "@/lib/db";
 import { removeUpload, saveUpload, validateUpload } from "@/lib/uploads";
 import type { FormState } from "./auth";
 import type { NewsStatus, Settings } from "@/lib/types";
 
-const refresh = () => revalidatePath("/", "layout");
+const refresh = () => invalidatePublicContent();
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : "Terjadi kesalahan.");
 
@@ -27,6 +29,7 @@ export async function saveNewsAction(_: FormState, fd: FormData): Promise<FormSt
   if(!category)return {error:"Pilih salah satu dari empat kategori berita yang tersedia."};
   let uploaded: string | undefined;
   try {
+    await assertDatabaseCapacity();
     const existing = id ? await db.getNewsById(id) : undefined;
     if (id && !existing) return { error: "Berita tidak ditemukan. Muat ulang halaman." };
     if(existing&&!canManageContent(session,existing.createdBy))return {error:"Anda hanya dapat mengubah berita milik sendiri."};
@@ -76,6 +79,7 @@ export async function addGalleryAction(_: FormState, fd: FormData): Promise<Form
   if (!title || title.length > 300) return { error: "Judul foto wajib diisi, maksimal 300 karakter." };
   const uploaded: string[] = [];
   try {
+    await assertDatabaseCapacity();
     const files = fd.getAll("image").filter((f): f is File => f instanceof File && Boolean(f.name));
     if (!files.length) return { error: "Pilih minimal satu foto." };
     if (files.length > 10 || files.reduce((total, f) => total + f.size, 0) > 3 * 1024 * 1024) return { error: "Maksimal 10 foto dengan total ukuran 3 MB per unggahan." };
@@ -110,6 +114,7 @@ export async function addDocumentAction(_: FormState, fd: FormData): Promise<For
   if (!title || title.length > 300) return { error: "Judul dokumen wajib diisi, maksimal 300 karakter." };
   let uploaded: string | undefined;
   try {
+    await assertDatabaseCapacity();
     const up = await saveUpload(fd.get("file"), "document");
     if (!up) return { error: "Pilih file dokumen." };
     uploaded = up.url;
@@ -142,6 +147,8 @@ export async function sendMessageAction(_: FormState, fd: FormData): Promise<For
   const email = str(fd, "email");
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Alamat email tidak valid." };
   try {
+  await assertDatabaseCapacity();
+  if(!await allowContactMessage())return {error:"Terlalu banyak pesan dari koneksi ini. Silakan coba kembali nanti atau gunakan kontak satuan."};
   await db.addMessage({
     name: name.slice(0, 120),
     email: str(fd, "email").slice(0, 160),
@@ -226,8 +233,8 @@ export async function addVideoAction(_: FormState, fd: FormData): Promise<FormSt
  const thumbnail=str(fd,"thumbnail");
  if(description.length>5000)return {error:"Narasi maksimal 5000 karakter."};
  if(!validThumbnailUrl(thumbnail))return {error:"URL thumbnail harus berupa alamat gambar HTTPS yang valid."};
- try { await db.addVideo(title, video.url, description, thumbnail,session.id,session.displayName); }
- catch { return {error:"Video belum dapat disimpan. Silakan coba kembali."}; }
+ try { await assertDatabaseCapacity(); await db.addVideo(title, video.url, description, thumbnail,session.id,session.displayName); }
+ catch (e) { return {error:e instanceof Error&&e.message.includes("batas aman")?e.message:"Video belum dapat disimpan. Silakan coba kembali."}; }
  refresh();
  return {ok:true};
 }

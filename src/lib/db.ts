@@ -49,31 +49,23 @@ const toNews = (r: NewsRow): News => ({
   updatedAt: iso(r.updated_at),
 });
 
-export async function listNews(opts?: {
-  includeDrafts?: boolean;
-  ownerId?: string;
-  category?: string;
-  q?: string;
-}): Promise<News[]> {
-  const where: string[] = [];
-  const params: Param[] = [];
-  if (!opts?.includeDrafts) where.push("n.status = 'published'");
-  if (opts?.category) {
-    const categories=[canonicalNewsCategory(opts.category)??opts.category];
-    const markers=categories.map(category=>{params.push(category);return `@v${params.length-1}`});
-    where.push(`n.category IN (${markers.join(",")})`);
-  }
-  if (opts?.q) {
-    params.push(`%${opts.q.replace(/[%_[\]]/g, "")}%`);
-    const i = params.length - 1;
-    where.push(`(n.title ILIKE @v${i} OR n.excerpt ILIKE @v${i})`);
-  }
-  if(opts?.ownerId){params.push(opts.ownerId);where.push(`n.created_by=@v${params.length-1}`);}
-  const rows = await query<NewsRow>(
-    `SELECT n.*,COALESCE(u.display_name,n.author) AS author FROM news n LEFT JOIN app_users u ON u.id=n.created_by ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY n.created_at DESC`,
-    params,
-  );
-  return rows.map(toNews);
+export type NewsOptions={includeDrafts?:boolean;ownerId?:string;category?:string;q?:string;summaryOnly?:boolean;limit?:number;offset?:number};
+function newsFilter(opts?:NewsOptions){
+ const where:string[]=[],params:Param[]=[];
+ if(!opts?.includeDrafts)where.push("n.status='published'");
+ if(opts?.category){params.push(canonicalNewsCategory(opts.category)??opts.category);where.push(`n.category=@v${params.length-1}`);}
+ if(opts?.q){params.push('%'+opts.q.replace(/[%_\[\]]/g,'')+'%');const i=params.length-1;where.push(`(n.title ILIKE @v${i} OR n.excerpt ILIKE @v${i})`);}
+ if(opts?.ownerId){params.push(opts.ownerId);where.push(`n.created_by=@v${params.length-1}`);}
+ return {where:where.length?'WHERE '+where.join(' AND '):'',params};
+}
+export async function countNews(opts?:NewsOptions){const {where,params}=newsFilter(opts);const [row]=await query<{count:string}>(`SELECT count(*) AS count FROM news n ${where}`,params);return Number(row.count);}
+export async function listNews(opts?:NewsOptions):Promise<News[]>{
+ const {where,params}=newsFilter(opts);
+ const columns=opts?.summaryOnly?"n.id,n.slug,n.title,n.excerpt,n.category,n.image,n.status,n.created_by,n.created_at,n.updated_at,''::text AS content":"n.*";
+ let pagination='';if(opts?.limit){params.push(Math.min(100,Math.max(1,Math.floor(opts.limit))));pagination+=` LIMIT @v${params.length-1}`;}
+ if(opts?.offset){params.push(Math.max(0,Math.floor(opts.offset)));pagination+=` OFFSET @v${params.length-1}`;}
+ const rows=await query<NewsRow>(`SELECT ${columns},COALESCE(u.display_name,n.author) AS author FROM news n LEFT JOIN app_users u ON u.id=n.created_by ${where} ORDER BY n.created_at DESC,n.id${pagination}`,params);
+ return rows.map(toNews);
 }
 export async function getNewsBySlug(slug: string) {
   const [r] = await query<NewsRow>(
@@ -116,8 +108,18 @@ export async function deleteNews(id: string) {
 }
 
 /* ---------- Gallery ---------- */
-export async function listGallery(opts?:{ownerId?:string}):Promise<GalleryItem[]>{
- const rows=await query<{id:string;title:string;image:string;created_at:Date;created_by:string|null;author:string}>("SELECT g.*,COALESCE(u.display_name,g.uploaded_by_name) AS author FROM gallery g LEFT JOIN app_users u ON u.id=g.created_by "+(opts?.ownerId?"WHERE g.created_by=@v0 ":"")+"ORDER BY g.created_at DESC",opts?.ownerId?[opts.ownerId]:[]);
+type MediaOptions={ownerId?:string;limit?:number;offset?:number};
+function mediaPagination(opts:MediaOptions|undefined,params:Param[]){
+ let sql='';
+ if(opts?.limit!==undefined){params.push(Number.isFinite(opts.limit)?Math.max(1,Math.min(100,Math.floor(opts.limit))):100);sql+=` LIMIT @v${params.length-1}`;}
+ if(opts?.offset){params.push(Number.isFinite(opts.offset)?Math.max(0,Math.floor(opts.offset)):0);sql+=` OFFSET @v${params.length-1}`;}
+ return sql;
+}
+export async function listGallery(opts?:MediaOptions):Promise<GalleryItem[]>{
+ const params:Param[]=opts?.ownerId?[opts.ownerId]:[];
+ const where=opts?.ownerId?'WHERE g.created_by=@v0 ':'';
+ const pagination=mediaPagination(opts,params);
+ const rows=await query<{id:string;title:string;image:string;created_at:Date;created_by:string|null;author:string}>(`SELECT g.*,COALESCE(u.display_name,g.uploaded_by_name) AS author FROM gallery g LEFT JOIN app_users u ON u.id=g.created_by ${where}ORDER BY g.created_at DESC,g.id${pagination}`,params);
  return rows.map(r=>({id:r.id,title:r.title,image:r.image,createdAt:iso(r.created_at),createdBy:r.created_by,author:r.author}));
 }
 export async function addGallery(title:string,image:string,createdBy?:string,author="Arsip redaksi"){
@@ -175,8 +177,11 @@ export async function deleteMessage(id: string) {
 }
 
 /* ---------- Video links ---------- */
-export async function listVideos(opts?:{ownerId?:string}){
- const rows=await query<{id:string;title:string;url:string;description:string;thumbnail:string;created_at:Date;created_by:string|null;author:string}>("SELECT v.*,COALESCE(u.display_name,v.uploaded_by_name) AS author FROM videos v LEFT JOIN app_users u ON u.id=v.created_by "+(opts?.ownerId?"WHERE v.created_by=@v0 ":"")+"ORDER BY v.created_at DESC",opts?.ownerId?[opts.ownerId]:[]);
+export async function listVideos(opts?:MediaOptions){
+ const params:Param[]=opts?.ownerId?[opts.ownerId]:[];
+ const where=opts?.ownerId?'WHERE v.created_by=@v0 ':'';
+ const pagination=mediaPagination(opts,params);
+ const rows=await query<{id:string;title:string;url:string;description:string;thumbnail:string;created_at:Date;created_by:string|null;author:string}>(`SELECT v.*,COALESCE(u.display_name,v.uploaded_by_name) AS author FROM videos v LEFT JOIN app_users u ON u.id=v.created_by ${where}ORDER BY v.created_at DESC,v.id${pagination}`,params);
  return rows.map(r=>({id:r.id,title:r.title,url:r.url,description:r.description,thumbnail:r.thumbnail,createdAt:iso(r.created_at),createdBy:r.created_by,author:r.author}));
 }
 export async function addVideo(title:string,url:string,description="",thumbnail="",createdBy?:string,author="Arsip redaksi"){
@@ -238,3 +243,5 @@ export async function moveMenuItem(id:string,direction:number){
   for(let i=0;i<siblings.length;i++)await execute("UPDATE navigation SET position=@v1 WHERE id=@v0",[siblings[i].id,Math.min(9999,(i+1)*10)]);
  });
 }
+
+export async function countMedia(table:"gallery"|"videos"){const [row]=await query<{count:string}>(`SELECT count(*) AS count FROM ${table}`);return Number(row.count);}

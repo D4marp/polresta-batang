@@ -1,4 +1,5 @@
 "use server";
+import { invalidatePublicContent } from "@/lib/invalidate-public";
 import {revalidatePath} from "next/cache";
 import {requireAdmin,requireUser,createSession} from "@/lib/auth";
 import {saveAccount,deleteAccount,getAccount,getPasswordHash,changeOwnPassword,updateOwnProfile} from "@/lib/accounts";
@@ -18,11 +19,11 @@ export async function saveAccountAction(_:FormState,fd:FormData):Promise<FormSta
   const savedId=await saveAccount({id,username,displayName,role,active:fd.get("active")==="on",passwordHash:password?await hashPassword(password):undefined},actor.id);
   if(savedId===actor.id){const updated=await getAccount(savedId);if(updated)await createSession(updated);}
  }catch(e){return {error:accountError(e)};}
- revalidatePath("/","layout");return {ok:true};
+ invalidatePublicContent();return {ok:true};
 }
 export async function deleteAccountAction(_:FormState,fd:FormData):Promise<FormState>{
  const actor=await requireAdmin();try{await deleteAccount(String(fd.get("id")??""),actor.id);}catch(e){return {error:accountError(e)};}
- revalidatePath("/","layout");return {ok:true};
+ invalidatePublicContent();return {ok:true};
 }
 export async function changePasswordAction(_:FormState,fd:FormData):Promise<FormState>{
  const user=await requireUser(),current=String(fd.get("currentPassword")??""),password=String(fd.get("newPassword")??"");
@@ -37,5 +38,5 @@ export async function changePasswordAction(_:FormState,fd:FormData):Promise<Form
 export async function updateProfileAction(_:FormState,fd:FormData):Promise<FormState>{
  const user=await requireUser(),name=String(fd.get("displayName")??"").trim();
  if(!name||name.length>120)return {error:"Nama penulis wajib diisi, maksimal 120 karakter."};
- await updateOwnProfile(user.id,name);revalidatePath("/","layout");return {ok:true};
+ await updateOwnProfile(user.id,name);invalidatePublicContent();return {ok:true};
 }

@@ -5,15 +5,15 @@ import { ArrowRight, Clock3 } from "lucide-react";
 import { NewsCard, SectionTitle } from "@/components/site/parts";
 import { NewsVisual } from "@/components/site/NewsVisual";
 import { ShareArticle } from "@/components/site/ShareArticle";
-import { getNewsBySlug, listNews } from "@/lib/db";
+import { getPublicNewsBySlug, getPublicNews } from "@/lib/public-data";
 import { formatDate } from "@/lib/format";
 
 type Props={params:Promise<{slug:string}>};
-export async function generateMetadata({params}:Props):Promise<Metadata>{const n=await getNewsBySlug((await params).slug);return n?{title:n.title,description:n.excerpt,openGraph:{title:n.title,description:n.excerpt,type:'article',publishedTime:n.createdAt,modifiedTime:n.updatedAt,authors:[n.author],images:n.image?[n.image]:[]}}:{title:'Berita tidak ditemukan'};}
+export async function generateMetadata({params}:Props):Promise<Metadata>{const n=await getPublicNewsBySlug((await params).slug);return n?{title:n.title,description:n.excerpt,openGraph:{title:n.title,description:n.excerpt,type:'article',publishedTime:n.createdAt,modifiedTime:n.updatedAt,authors:[n.author],images:n.image?[n.image]:[]}}:{title:'Berita tidak ditemukan'};}
 export default async function NewsDetail({params}:Props){
- const n=await getNewsBySlug((await params).slug);if(!n)notFound();
- const others=(await listNews()).filter(x=>x.id!==n.id);
- const related=others.filter(x=>x.category===n.category).slice(0,3);
+ const n=await getPublicNewsBySlug((await params).slug);if(!n)notFound();
+ const others=(await getPublicNews({limit:6})).filter(x=>x.id!==n.id);
+ const related=(await getPublicNews({category:n.category,limit:4})).filter(x=>x.id!==n.id).slice(0,3);
  const reading=Math.max(1,Math.ceil(n.content.trim().split(/\s+/).length/200));
  return <div className="container-x py-7"><nav aria-label="Breadcrumb artikel" className="mb-7 flex flex-wrap items-center gap-2 text-[10px] font-medium text-slate-400"><Link href="/" className="hover:text-red-700">Beranda</Link><span>/</span><Link href="/berita" className="hover:text-red-700">Berita</Link><span>/</span><Link href={`/berita?kategori=${encodeURIComponent(n.category)}`} className="text-red-700">{n.category}</Link></nav>
  <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-12"><article className="min-w-0"><Link href={`/berita?kategori=${encodeURIComponent(n.category)}`} className="news-category">{n.category}</Link><h1 className="news-headline mt-3 max-w-4xl text-[clamp(1.9rem,4.3vw,3.4rem)] leading-[1.13] tracking-tight text-navy-950">{n.title}</h1><p className="mt-5 text-base leading-7 text-slate-500 sm:text-lg">{n.excerpt}</p>

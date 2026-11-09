@@ -1,6 +1,7 @@
 "use server";
+import { invalidatePublicContent } from "@/lib/invalidate-public";
 import { randomUUID } from "node:crypto";
-import { revalidatePath } from "next/cache";
+
 import { requireAdmin } from "@/lib/auth";
 import { saveMenuItem, deleteMenuItem, moveMenuItem } from "@/lib/db";
 import { validMenuHref } from "@/lib/navigation";
@@ -20,16 +21,16 @@ export async function saveMenuAction(_:FormState,fd:FormData):Promise<FormState>
   const message=e instanceof Error?e.message:"";
   return {error:message.startsWith("Menu ")?message:"Menu belum dapat disimpan. Coba kembali."};
  }
- revalidatePath("/","layout");
+ invalidatePublicContent();
  return {ok:true};
 }
 export async function deleteMenuAction(fd:FormData){
  await requireAdmin();
  await deleteMenuItem(String(fd.get("id")??""));
- revalidatePath("/","layout");
+ invalidatePublicContent();
 }
 export async function moveMenuAction(fd:FormData){
  await requireAdmin();
  await moveMenuItem(String(fd.get("id")??""),fd.get("direction")==="up"?-1:1);
- revalidatePath("/","layout");
+ invalidatePublicContent();
 }
